@@ -1,0 +1,57 @@
+wait(5.5)
+local ba = Instance.new("ScreenGui")
+local ca = Instance.new("TextLabel")
+local da = Instance.new("Frame")
+local _b = Instance.new("TextLabel")
+local ab = Instance.new("TextLabel")
+
+ba.Parent = game.CoreGui
+ba.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Main Title
+ca.Parent = ba
+ca.Active = true
+ca.BackgroundColor3 = Color3.fromRGB(255, 255, 200) -- พื้นหลังเหลืองพาสเทล
+ca.Draggable = true
+ca.Position = UDim2.new(0.75, 0, 0.1, 0)
+ca.Size = UDim2.new(0, 160, 0, 28)
+ca.Font = Enum.Font.SourceSansSemibold
+ca.Text = "กันเตะ 20 นาที"
+ca.TextColor3 = Color3.fromRGB(0, 0, 0) -- ตัวหนังสือสีดำ
+ca.TextSize = 14
+
+-- Container
+da.Parent = ca
+da.BackgroundColor3 = Color3.fromRGB(255, 255, 200) -- พื้นหลังเหลืองพาสเทล
+da.Position = UDim2.new(0, 0, 1.02, 0)
+da.Size = UDim2.new(0, 160, 0, 55)
+
+-- Footer
+_b.Parent = da
+_b.BackgroundColor3 = Color3.fromRGB(255, 255, 200) -- พื้นหลังเหลืองพาสเทล
+_b.Position = UDim2.new(0, 0, 0.75, 0)
+_b.Size = UDim2.new(0, 160, 0, 12)
+_b.Font = Enum.Font.Arial
+_b.Text = "ทำโดย JeabDestiny"
+_b.TextColor3 = Color3.fromRGB(0, 0, 0) -- ตัวหนังสือสีดำ
+_b.TextSize = 12
+
+-- Status
+ab.Parent = da
+ab.BackgroundColor3 = Color3.fromRGB(255, 255, 200) -- พื้นหลังเหลืองพาสเทล
+ab.Position = UDim2.new(0, 0, 0.15, 0)
+ab.Size = UDim2.new(0, 160, 0, 20)
+ab.Font = Enum.Font.ArialBold
+ab.Text = "สเตตัส : กันเตะ เริ่มทำงาน"
+ab.TextColor3 = Color3.fromRGB(0, 0, 0) -- ตัวหนังสือสีดำ
+ab.TextSize = 12
+
+-- Anti-AFK
+local bb = game:service'VirtualUser'
+game:service'Players'.LocalPlayer.Idled:connect(function()
+    bb:CaptureController()
+    bb:ClickButton2(Vector2.new())
+    ab.Text = "คุณว่างนาน แต่กันเตะทำงานอยู่!"
+    wait(2)
+    ab.Text = "กันเตะทำงานปกติ"
+end)
