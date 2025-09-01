@@ -1,19 +1,16 @@
---// Auto Scylla Hunt (Loop Fix)
+--// Auto Scylla Hunt GUI (Movable + Exit)
 --// Made By Jeab
 
--- ตั้งชื่อไอเท็มตรงกับใน Backpack
 local sundialName = "Sundial Totem"
 local auroraName = "Aurora Totem"
 
--- Services
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- สถานะการทำงาน
 local isRunning = false
 local scyllaActive = false
 
--- ฟังก์ชันใช้ไอเท็มตามชื่อ
+-- ใช้ไอเท็ม
 local function useItem(itemName)
     local backpack = LocalPlayer.Backpack
     local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -22,14 +19,14 @@ local function useItem(itemName)
     local tool = backpack:FindFirstChild(itemName)
     if tool then
         humanoid:EquipTool(tool)
-        task.wait(0.3)
+        task.wait(0.2)
         tool:Activate()
         return true
     end
     return false
 end
 
--- Event จับข้อความในแชท
+-- จับข้อความแชท
 LocalPlayer.Chatted:Connect(function(msg)
     if string.find(msg, "Scylla Hunt has begun!") then
         scyllaActive = true
@@ -38,56 +35,74 @@ LocalPlayer.Chatted:Connect(function(msg)
     end
 end)
 
--- ฟังก์ชันหลัก
+-- ลูปหลัก
 local function mainLoop()
     while isRunning do
-        -- 1. กด Sundial วนไปเรื่อยๆ จนเจอ Scylla
-        scyllaActive = false
-        while isRunning and not scyllaActive do
+        if not scyllaActive then
             useItem(sundialName)
             task.wait(3)
+        else
+            warn("Scylla Spawned! ใช้ Aurora Totem หนึ่งครั้ง")
+            useItem(auroraName)
+
+            repeat
+                task.wait(1)
+            until not isRunning or not scyllaActive
+
+            warn("Scylla จบ → กลับไปกด Sundial ใหม่")
         end
-
-        if not isRunning then break end
-        warn("Scylla Spawned! → ใช้ Aurora Totem")
-
-        -- 2. ใช้ Aurora 1 รอบ
-        useItem(auroraName)
-
-        -- 3. รอ Event จบ
-        repeat task.wait(1) until (not isRunning) or (not scyllaActive)
-
-        if not isRunning then break end
-        warn("Scylla จบ → วนใหม่")
     end
 end
 
--- GUI Toggle
+-- GUI
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
+-- กรอบหลัก
+local Frame = Instance.new("Frame")
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0,180,0,120)
+Frame.Position = UDim2.new(0.05,0,0.2,0)
+Frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Frame.Active = true
+Frame.Draggable = true -- ทำให้ลากได้
+Frame.BorderSizePixel = 2
+
+-- ปุ่มเปิด/ปิด
 local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Parent = ScreenGui
-ToggleBtn.Size = UDim2.new(0,150,0,50)
-ToggleBtn.Position = UDim2.new(0.05,0,0.2,0)
+ToggleBtn.Parent = Frame
+ToggleBtn.Size = UDim2.new(0,120,0,35)
+ToggleBtn.Position = UDim2.new(0.5,-60,0,10)
 ToggleBtn.Text = "ปิดการทำงาน"
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
 ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
 ToggleBtn.Font = Enum.Font.SourceSansBold
-ToggleBtn.TextSize = 20
+ToggleBtn.TextSize = 18
 
+-- ปุ่มปิดสคริปต์
+local ExitBtn = Instance.new("TextButton")
+ExitBtn.Parent = Frame
+ExitBtn.Size = UDim2.new(0,60,0,25)
+ExitBtn.Position = UDim2.new(1,-65,0,10)
+ExitBtn.Text = "ปิดสคริปต์"
+ExitBtn.BackgroundColor3 = Color3.fromRGB(100,0,0)
+ExitBtn.TextColor3 = Color3.fromRGB(255,255,255)
+ExitBtn.Font = Enum.Font.SourceSans
+ExitBtn.TextSize = 14
+
+-- Label Made By Jeab
 local MadeBy = Instance.new("TextLabel")
-MadeBy.Parent = ScreenGui
-MadeBy.Size = UDim2.new(0,150,0,20)
-MadeBy.Position = UDim2.new(0.05,0,0.2,55)
+MadeBy.Parent = Frame
+MadeBy.Size = UDim2.new(1,0,0,20)
+MadeBy.Position = UDim2.new(0,0,1,-25)
 MadeBy.BackgroundTransparency = 1
 MadeBy.Text = "Made By Jeab"
 MadeBy.TextColor3 = Color3.fromRGB(255,255,255)
 MadeBy.Font = Enum.Font.SourceSansItalic
 MadeBy.TextSize = 14
 
--- Toggle ปุ่ม
+-- ฟังก์ชันปุ่ม
 ToggleBtn.MouseButton1Click:Connect(function()
     isRunning = not isRunning
     if isRunning then
@@ -98,4 +113,10 @@ ToggleBtn.MouseButton1Click:Connect(function()
         ToggleBtn.Text = "ปิดการทำงาน"
         ToggleBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
     end
+end)
+
+ExitBtn.MouseButton1Click:Connect(function()
+    isRunning = false
+    ScreenGui:Destroy()
+    warn("สคริปต์หยุดทำงานแล้ว")
 end)
