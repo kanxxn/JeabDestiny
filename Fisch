@@ -1,4 +1,4 @@
---// Auto Scylla Hunt GUI (Movable + Exit)
+--// Auto Scylla Hunt (Spam Sundial + GUI Centered)
 --// Made By Jeab
 
 local sundialName = "Sundial Totem"
@@ -19,7 +19,7 @@ local function useItem(itemName)
     local tool = backpack:FindFirstChild(itemName)
     if tool then
         humanoid:EquipTool(tool)
-        task.wait(0.2)
+        task.wait()
         tool:Activate()
         return true
     end
@@ -39,18 +39,20 @@ end)
 local function mainLoop()
     while isRunning do
         if not scyllaActive then
+            -- Spam Sundial แบบไม่มีดีเลย์
             useItem(sundialName)
-            task.wait(3)
         else
             warn("Scylla Spawned! ใช้ Aurora Totem หนึ่งครั้ง")
             useItem(auroraName)
 
+            -- รอจน Event จบ
             repeat
-                task.wait(1)
+                task.wait(0.5)
             until not isRunning or not scyllaActive
 
             warn("Scylla จบ → กลับไปกด Sundial ใหม่")
         end
+        task.wait() -- กันเกมค้าง (รอ 1 frame)
     end
 end
 
@@ -62,34 +64,34 @@ ScreenGui.ResetOnSpawn = false
 -- กรอบหลัก
 local Frame = Instance.new("Frame")
 Frame.Parent = ScreenGui
-Frame.Size = UDim2.new(0,180,0,120)
+Frame.Size = UDim2.new(0,200,0,120)
 Frame.Position = UDim2.new(0.05,0,0.2,0)
 Frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 Frame.Active = true
-Frame.Draggable = true -- ทำให้ลากได้
+Frame.Draggable = true
 Frame.BorderSizePixel = 2
 
--- ปุ่มเปิด/ปิด
+-- ปุ่มเปิด/ปิด (ตรงกลาง)
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Parent = Frame
-ToggleBtn.Size = UDim2.new(0,120,0,35)
-ToggleBtn.Position = UDim2.new(0.5,-60,0,10)
+ToggleBtn.Size = UDim2.new(0,140,0,35)
+ToggleBtn.Position = UDim2.new(0.5,-70,0,25) -- อยู่ตรงกลาง Frame
 ToggleBtn.Text = "ปิดการทำงาน"
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
 ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
 ToggleBtn.Font = Enum.Font.SourceSansBold
 ToggleBtn.TextSize = 18
 
--- ปุ่มปิดสคริปต์
+-- ปุ่มปิดสคริปต์ (มุมขวาบนเล็กๆ)
 local ExitBtn = Instance.new("TextButton")
 ExitBtn.Parent = Frame
 ExitBtn.Size = UDim2.new(0,60,0,25)
-ExitBtn.Position = UDim2.new(1,-65,0,10)
-ExitBtn.Text = "ปิดสคริปต์"
+ExitBtn.Position = UDim2.new(1,-65,0,5)
+ExitBtn.Text = "X"
 ExitBtn.BackgroundColor3 = Color3.fromRGB(100,0,0)
 ExitBtn.TextColor3 = Color3.fromRGB(255,255,255)
-ExitBtn.Font = Enum.Font.SourceSans
-ExitBtn.TextSize = 14
+ExitBtn.Font = Enum.Font.SourceSansBold
+ExitBtn.TextSize = 16
 
 -- Label Made By Jeab
 local MadeBy = Instance.new("TextLabel")
