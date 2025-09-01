@@ -1,0 +1,101 @@
+--// Auto Scylla Hunt (Loop Fix)
+--// Made By Jeab
+
+-- ตั้งชื่อไอเท็มตรงกับใน Backpack
+local sundialName = "Sundial Totem"
+local auroraName = "Aurora Totem"
+
+-- Services
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- สถานะการทำงาน
+local isRunning = false
+local scyllaActive = false
+
+-- ฟังก์ชันใช้ไอเท็มตามชื่อ
+local function useItem(itemName)
+    local backpack = LocalPlayer.Backpack
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local humanoid = char:WaitForChild("Humanoid")
+
+    local tool = backpack:FindFirstChild(itemName)
+    if tool then
+        humanoid:EquipTool(tool)
+        task.wait(0.3)
+        tool:Activate()
+        return true
+    end
+    return false
+end
+
+-- Event จับข้อความในแชท
+LocalPlayer.Chatted:Connect(function(msg)
+    if string.find(msg, "Scylla Hunt has begun!") then
+        scyllaActive = true
+    elseif string.find(msg, "The Scylla got away") then
+        scyllaActive = false
+    end
+end)
+
+-- ฟังก์ชันหลัก
+local function mainLoop()
+    while isRunning do
+        -- 1. กด Sundial วนไปเรื่อยๆ จนเจอ Scylla
+        scyllaActive = false
+        while isRunning and not scyllaActive do
+            useItem(sundialName)
+            task.wait(3)
+        end
+
+        if not isRunning then break end
+        warn("Scylla Spawned! → ใช้ Aurora Totem")
+
+        -- 2. ใช้ Aurora 1 รอบ
+        useItem(auroraName)
+
+        -- 3. รอ Event จบ
+        repeat task.wait(1) until (not isRunning) or (not scyllaActive)
+
+        if not isRunning then break end
+        warn("Scylla จบ → วนใหม่")
+    end
+end
+
+-- GUI Toggle
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Parent = ScreenGui
+ToggleBtn.Size = UDim2.new(0,150,0,50)
+ToggleBtn.Position = UDim2.new(0.05,0,0.2,0)
+ToggleBtn.Text = "ปิดการทำงาน"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
+ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
+ToggleBtn.Font = Enum.Font.SourceSansBold
+ToggleBtn.TextSize = 20
+
+local MadeBy = Instance.new("TextLabel")
+MadeBy.Parent = ScreenGui
+MadeBy.Size = UDim2.new(0,150,0,20)
+MadeBy.Position = UDim2.new(0.05,0,0.2,55)
+MadeBy.BackgroundTransparency = 1
+MadeBy.Text = "Made By Jeab"
+MadeBy.TextColor3 = Color3.fromRGB(255,255,255)
+MadeBy.Font = Enum.Font.SourceSansItalic
+MadeBy.TextSize = 14
+
+-- Toggle ปุ่ม
+ToggleBtn.MouseButton1Click:Connect(function()
+    isRunning = not isRunning
+    if isRunning then
+        ToggleBtn.Text = "เปิดการทำงาน"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0,200,0)
+        task.spawn(mainLoop)
+    else
+        ToggleBtn.Text = "ปิดการทำงาน"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
+    end
+end)
