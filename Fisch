@@ -1,4 +1,4 @@
---// Auto Scylla Hunt (Spam Sundial + GUI Centered)
+--// Auto Scylla Hunt (Delta Mobile Simplified)
 --// Made By Jeab
 
 local sundialName = "Sundial Totem"
@@ -10,7 +10,7 @@ local LocalPlayer = Players.LocalPlayer
 local isRunning = false
 local scyllaActive = false
 
--- ใช้ไอเท็ม
+-- ใช้ไอเท็มจาก Backpack
 local function useItem(itemName)
     local backpack = LocalPlayer.Backpack
     local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -21,12 +21,10 @@ local function useItem(itemName)
         humanoid:EquipTool(tool)
         task.wait()
         tool:Activate()
-        return true
     end
-    return false
 end
 
--- จับข้อความแชท
+-- ฟังข้อความแชท
 LocalPlayer.Chatted:Connect(function(msg)
     if string.find(msg, "Scylla Hunt has begun!") then
         scyllaActive = true
@@ -39,20 +37,15 @@ end)
 local function mainLoop()
     while isRunning do
         if not scyllaActive then
-            -- Spam Sundial แบบไม่มีดีเลย์
+            -- Spam Sundial ไม่มีหยุด
             useItem(sundialName)
         else
-            warn("Scylla Spawned! ใช้ Aurora Totem หนึ่งครั้ง")
+            -- Scylla มาแล้ว ใช้ Aurora 1 ครั้ง
             useItem(auroraName)
-
-            -- รอจน Event จบ
-            repeat
-                task.wait(0.5)
-            until not isRunning or not scyllaActive
-
-            warn("Scylla จบ → กลับไปกด Sundial ใหม่")
+            -- รอจนกว่า Event จะจบ
+            repeat task.wait() until not isRunning or not scyllaActive
         end
-        task.wait() -- กันเกมค้าง (รอ 1 frame)
+        task.wait() -- กันเกมค้าง
     end
 end
 
@@ -61,7 +54,7 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- กรอบหลัก
+-- กรอบ
 local Frame = Instance.new("Frame")
 Frame.Parent = ScreenGui
 Frame.Size = UDim2.new(0,200,0,120)
@@ -69,24 +62,23 @@ Frame.Position = UDim2.new(0.05,0,0.2,0)
 Frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 Frame.Active = true
 Frame.Draggable = true
-Frame.BorderSizePixel = 2
 
--- ปุ่มเปิด/ปิด (ตรงกลาง)
+-- ปุ่มเปิด/ปิด (กลางกรอบ)
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Parent = Frame
 ToggleBtn.Size = UDim2.new(0,140,0,35)
-ToggleBtn.Position = UDim2.new(0.5,-70,0,25) -- อยู่ตรงกลาง Frame
+ToggleBtn.Position = UDim2.new(0.5,-70,0.5,-17)
 ToggleBtn.Text = "ปิดการทำงาน"
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
 ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
 ToggleBtn.Font = Enum.Font.SourceSansBold
 ToggleBtn.TextSize = 18
 
--- ปุ่มปิดสคริปต์ (มุมขวาบนเล็กๆ)
+-- ปุ่มปิดสคริปต์ (มุมขวาบน)
 local ExitBtn = Instance.new("TextButton")
 ExitBtn.Parent = Frame
-ExitBtn.Size = UDim2.new(0,60,0,25)
-ExitBtn.Position = UDim2.new(1,-65,0,5)
+ExitBtn.Size = UDim2.new(0,25,0,25)
+ExitBtn.Position = UDim2.new(1,-30,0,5)
 ExitBtn.Text = "X"
 ExitBtn.BackgroundColor3 = Color3.fromRGB(100,0,0)
 ExitBtn.TextColor3 = Color3.fromRGB(255,255,255)
@@ -97,7 +89,7 @@ ExitBtn.TextSize = 16
 local MadeBy = Instance.new("TextLabel")
 MadeBy.Parent = Frame
 MadeBy.Size = UDim2.new(1,0,0,20)
-MadeBy.Position = UDim2.new(0,0,1,-25)
+MadeBy.Position = UDim2.new(0,0,1,-22)
 MadeBy.BackgroundTransparency = 1
 MadeBy.Text = "Made By Jeab"
 MadeBy.TextColor3 = Color3.fromRGB(255,255,255)
@@ -120,5 +112,4 @@ end)
 ExitBtn.MouseButton1Click:Connect(function()
     isRunning = false
     ScreenGui:Destroy()
-    warn("สคริปต์หยุดทำงานแล้ว")
 end)
