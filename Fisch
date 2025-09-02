@@ -1,8 +1,8 @@
---// Auto Scylla Hunt Script with GUI //--
+--// Auto Scylla Hunt Script with GUI (Fixed) //--
 -- Made By Jeab
 
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local LocalPlayer = Players.LocalPlayer
@@ -12,7 +12,7 @@ local sundialName = "Sundial Totem"
 local auroraName = "Aurora Totem"
 local rodName = "Blessed Rod Of The Zenith"
 
--- สถานะการทำงาน
+-- สถานะ
 local isRunning = false
 local scyllaActive = false
 
@@ -21,53 +21,49 @@ local function useItem(itemName)
     for i, v in ipairs(LocalPlayer.Backpack:GetChildren()) do
         if v.Name == itemName then
             LocalPlayer.Character.Humanoid:EquipTool(v)
-            task.wait(0.1)
+            task.wait(0.2)
             VirtualInputManager:SendKeyEvent(true, "E", false, game)
             task.wait(0.1)
             VirtualInputManager:SendKeyEvent(false, "E", false, game)
+            print("[DEBUG] ใช้ไอเท็ม:", itemName)
             break
         end
     end
 end
 
 -- loop หลัก
-local function mainLoop()
-    task.spawn(function()
-        while true do
-            if isRunning then
-                if not scyllaActive then
-                    -- ใช้ Sundial ต่อเนื่อง
-                    useItem(sundialName)
-                else
-                    -- Scylla เกิด → ใช้ Aurora Totem 1 ครั้ง
-                    useItem(auroraName)
-                    task.wait(1)
-                    -- จากนั้นเปลี่ยนไปถือคันเบ็ด
-                    useItem(rodName)
-                    -- รอจนกว่า Scylla หายไป
-                    repeat task.wait() until not isRunning or not scyllaActive
-                end
+task.spawn(function()
+    while true do
+        if isRunning then
+            if not scyllaActive then
+                useItem(sundialName)
+            else
+                useItem(auroraName)
+                task.wait(1)
+                useItem(rodName)
+                repeat task.wait() until not isRunning or not scyllaActive
             end
-            task.wait(0.5)
         end
-    end)
-end
-
--- Detect system chat
-local chatEvent = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("OnMessageDoneFiltering")
-chatEvent.OnClientEvent:Connect(function(data)
-    local msg = data.Message or ""
-    if string.find(msg, "Scylla Hunt has begun!") then
-        scyllaActive = true
-    elseif string.find(msg, "The Scylla got away") then
-        scyllaActive = false
-    elseif string.find(msg, "has caught the Scylla!") then
-        scyllaActive = false
+        task.wait(0.5)
     end
 end)
 
--- เริ่ม loop
-mainLoop()
+-- Detect system chat (TextChatService)
+TextChatService.OnIncomingMessage = function(message)
+    local msg = message.Text or ""
+    print("[DEBUG CHAT] " .. msg)
+
+    if string.find(msg, "Scylla Hunt has begun!") then
+        scyllaActive = true
+        print("[DEBUG] Scylla เริ่มแล้ว")
+    elseif string.find(msg, "The Scylla got away") then
+        scyllaActive = false
+        print("[DEBUG] Scylla หนีไปแล้ว")
+    elseif string.find(msg, "has caught the Scylla!") then
+        scyllaActive = false
+        print("[DEBUG] Scylla ถูกจับแล้ว")
+    end
+end
 
 --// GUI //--
 local ScreenGui = Instance.new("ScreenGui")
@@ -77,7 +73,7 @@ local ToggleButton = Instance.new("TextButton")
 local StopButton = Instance.new("TextButton")
 local Credit = Instance.new("TextLabel")
 
-ScreenGui.Parent = game.CoreGui
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 Frame.Parent = ScreenGui
