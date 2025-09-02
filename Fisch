@@ -5,7 +5,6 @@ local sundialName = "Sundial Totem"
 local rodName = "Blessed Rod Of The Zenith"
 
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
 local isRunning = false
@@ -52,20 +51,17 @@ local function equipItem(itemName)
     return false
 end
 
--- ✅ ตรวจจับข้อความระบบในแชท
-local chatEvent = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("OnMessageDoneFiltering")
-chatEvent.OnClientEvent:Connect(function(data)
-    local msg = data.Message
-
+-- ✅ Detect ข้อความจาก LocalPlayer.Chatted
+LocalPlayer.Chatted:Connect(function(msg)
     if string.find(msg, "Scylla Hunt has begun!") then
         scyllaActive = true
         print("[DEBUG] Scylla เกิดแล้ว! → ถือ Rod")
     elseif string.find(msg, "The Scylla got away") then
         scyllaActive = false
-        print("[DEBUG] Scylla หนีไปแล้ว → กลับมาใช้ Sundial")
+        print("[DEBUG] Scylla หนีไปแล้ว → ใช้ Sundial")
     elseif string.find(msg, "has caught the Scylla!") then
         scyllaActive = false
-        print("[DEBUG] Scylla ถูกจับ → กลับมาใช้ Sundial")
+        print("[DEBUG] Scylla ถูกจับ → ใช้ Sundial")
     end
 end)
 
@@ -98,10 +94,7 @@ Frame.Active = true
 Frame.Draggable = true
 Frame.BorderSizePixel = 0
 Frame.BackgroundTransparency = 0.05
-Frame.ClipsDescendants = true
-Frame.ZIndex = 2
-Frame.UICorner = Instance.new("UICorner", Frame)
-Frame.UICorner.CornerRadius = UDim.new(0,12)
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,12)
 
 local Title = Instance.new("TextLabel")
 Title.Parent = Frame
