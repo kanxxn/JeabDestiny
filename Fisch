@@ -1,4 +1,4 @@
---// Auto Scylla Hunt Script with GUI (Fixed) //--
+--// Auto Scylla Hunt Script (TextChatService Only) //--
 -- Made By Jeab
 
 local Players = game:GetService("Players")
@@ -7,12 +7,12 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local LocalPlayer = Players.LocalPlayer
 
--- ชื่อไอเท็ม
+-- ตั้งชื่อไอเท็ม
 local sundialName = "Sundial Totem"
 local auroraName = "Aurora Totem"
 local rodName = "Blessed Rod Of The Zenith"
 
--- สถานะ
+-- ตัวแปรสถานะ
 local isRunning = false
 local scyllaActive = false
 
@@ -48,7 +48,7 @@ task.spawn(function()
     end
 end)
 
--- Detect system chat (TextChatService)
+-- ✅ ใช้ TextChatService อ่านแชท
 TextChatService.OnIncomingMessage = function(message)
     local msg = message.Text or ""
     print("[DEBUG CHAT] " .. msg)
@@ -112,7 +112,7 @@ Credit.TextColor3 = Color3.fromRGB(255,255,255)
 Credit.Font = Enum.Font.SourceSansItalic
 Credit.TextSize = 14
 
--- ปุ่มสลับทำงาน
+-- ปุ่มเปิด/ปิดการทำงาน
 ToggleButton.MouseButton1Click:Connect(function()
     isRunning = not isRunning
     if isRunning then
