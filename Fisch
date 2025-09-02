@@ -5,6 +5,7 @@ local sundialName = "Sundial Totem"
 local rodName = "Blessed Rod Of The Zenith"
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
 local isRunning = false
@@ -51,19 +52,30 @@ local function equipItem(itemName)
     return false
 end
 
--- ✅ Detect ข้อความจาก LocalPlayer.Chatted
-LocalPlayer.Chatted:Connect(function(msg)
-    if string.find(msg, "Scylla Hunt has begun!") then
-        scyllaActive = true
-        print("[DEBUG] Scylla เกิดแล้ว! → ถือ Rod")
-    elseif string.find(msg, "The Scylla got away") then
-        scyllaActive = false
-        print("[DEBUG] Scylla หนีไปแล้ว → ใช้ Sundial")
-    elseif string.find(msg, "has caught the Scylla!") then
-        scyllaActive = false
-        print("[DEBUG] Scylla ถูกจับ → ใช้ Sundial")
+-- ✅ Detect ข้อความในระบบแชท
+local ChatEvents = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents", 10)
+if ChatEvents then
+    local OnMessage = ChatEvents:WaitForChild("OnMessageDoneFiltering", 10)
+    if OnMessage then
+        OnMessage.OnClientEvent:Connect(function(msgData)
+            local msg = msgData.Message
+            if string.find(msg, "Scylla Hunt has begun!") then
+                scyllaActive = true
+                print("[DEBUG] Scylla เกิดแล้ว! → ถือ Rod")
+            elseif string.find(msg, "The Scylla got away") then
+                scyllaActive = false
+                print("[DEBUG] Scylla หนีไปแล้ว → ใช้ Sundial")
+            elseif string.find(msg, "has caught the Scylla!") then
+                scyllaActive = false
+                print("[DEBUG] Scylla ถูกจับ → ใช้ Sundial")
+            end
+        end)
+    else
+        warn("[ERROR] OnMessageDoneFiltering ไม่เจอ")
     end
-end)
+else
+    warn("[ERROR] DefaultChatSystemChatEvents ไม่เจอ")
+end
 
 -- ลูปหลัก
 local function mainLoop()
