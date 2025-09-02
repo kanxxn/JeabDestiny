@@ -1,34 +1,39 @@
--- 🐥 Auto Scylla Hunt GUI + Debug Log by Jeab 🐥
--- รวมโค้ดเต็ม พร้อมแก้ให้เลือก Rod Of The Zenith โดยไม่สน prefix/buff
+--// Auto Scylla Hunt with GUI 🐥 by Jeab
 
--- // Services
+-- Services
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local StarterGui = game:GetService("StarterGui")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 
-local player = Players.LocalPlayer
-local backpack = player:WaitForChild("Backpack")
+-- Debug log storage
+local debugLogs = {}
 
--- // GUI หลัก
+-- Function to add debug log
+local function addDebug(msg)
+    table.insert(debugLogs, msg)
+    if #debugLogs > 50 then
+        table.remove(debugLogs, 1)
+    end
+    debugFrame.Visible = debugVisible
+    logLabel.Text = table.concat(debugLogs, "\n")
+end
+
+-- Create ScreenGui
 local screenGui = Instance.new("ScreenGui", game.CoreGui)
+screenGui.ResetOnSpawn = false
 
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 260, 0, 180)
-mainFrame.Position = UDim2.new(0.05, 0, 0.3, 0)
+-- Main Frame
+local mainFrame = Instance.new("Frame", screenGui)
+mainFrame.Size = UDim2.new(0, 250, 0, 180)
+mainFrame.Position = UDim2.new(0, 100, 0, 100)
 mainFrame.BackgroundColor3 = Color3.fromRGB(255, 200, 100)
-mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
 mainFrame.Draggable = true
-mainFrame.Parent = screenGui
-
-mainFrame.BackgroundTransparency = 0.05
-mainFrame.ClipsDescendants = true
-mainFrame.AnchorPoint = Vector2.new(0, 0)
+Instance.new("UICorner", mainFrame)
 
 -- Title
 local title = Instance.new("TextLabel", mainFrame)
-title.Size = UDim2.new(1, -40, 0, 35)
+title.Size = UDim2.new(1, -80, 0, 35)
 title.Position = UDim2.new(0, 10, 0, 0)
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.SourceSansBold
@@ -37,200 +42,161 @@ title.TextSize = 20
 title.TextColor3 = Color3.fromRGB(50, 30, 0)
 title.TextXAlignment = Enum.TextXAlignment.Left
 
--- ปุ่ม Minimize
+-- Minimize Button
 local minimizeBtn = Instance.new("TextButton", mainFrame)
 minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
-minimizeBtn.Position = UDim2.new(1, -70, 0, 2)
+minimizeBtn.Position = UDim2.new(1, -65, 0, 3)
 minimizeBtn.BackgroundColor3 = Color3.fromRGB(150, 255, 150)
 minimizeBtn.Text = "-"
 minimizeBtn.TextSize = 20
 minimizeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 minimizeBtn.Font = Enum.Font.SourceSansBold
-minimizeBtn.AutoButtonColor = true
-minimizeBtn.BackgroundTransparency = 0
-minimizeBtn.BorderSizePixel = 0
-minimizeBtn.TextStrokeTransparency = 0.8
-minimizeBtn.TextScaled = true
-minimizeBtn.ClipsDescendants = true
-minimizeBtn.ZIndex = 2
-minimizeBtn.AutoButtonColor = false
-minimizeBtn.UICorner = Instance.new("UICorner", minimizeBtn)
-minimizeBtn.UICorner.CornerRadius = UDim.new(1,0)
+Instance.new("UICorner", minimizeBtn)
 
--- ปุ่ม Close
+-- Close Button
 local closeBtn = Instance.new("TextButton", mainFrame)
 closeBtn.Size = UDim2.new(0, 30, 0, 30)
-closeBtn.Position = UDim2.new(1, -35, 0, 2)
+closeBtn.Position = UDim2.new(1, -32, 0, 3)
 closeBtn.BackgroundColor3 = Color3.fromRGB(255, 150, 150)
 closeBtn.Text = "x"
 closeBtn.TextSize = 20
 closeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 closeBtn.Font = Enum.Font.SourceSansBold
-closeBtn.AutoButtonColor = true
-closeBtn.BackgroundTransparency = 0
-closeBtn.BorderSizePixel = 0
-closeBtn.TextStrokeTransparency = 0.8
-closeBtn.TextScaled = true
-closeBtn.ClipsDescendants = true
-closeBtn.ZIndex = 2
-closeBtn.AutoButtonColor = false
-closeBtn.UICorner = Instance.new("UICorner", closeBtn)
-closeBtn.UICorner.CornerRadius = UDim.new(1,0)
+Instance.new("UICorner", closeBtn)
 
--- ปุ่ม Toggle Auto
+-- Toggle Button
 local toggleBtn = Instance.new("TextButton", mainFrame)
-toggleBtn.Size = UDim2.new(0.8, 0, 0, 50)
-toggleBtn.Position = UDim2.new(0.1, 0, 0.3, 0)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(100, 220, 100)
+toggleBtn.Size = UDim2.new(0, 200, 0, 50)
+toggleBtn.Position = UDim2.new(0.5, -100, 0, 50)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
 toggleBtn.Text = "เปิดการทำงาน"
 toggleBtn.TextSize = 22
-toggleBtn.TextColor3 = Color3.new(1,1,1)
 toggleBtn.Font = Enum.Font.SourceSansBold
-toggleBtn.UICorner = Instance.new("UICorner", toggleBtn)
+toggleBtn.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", toggleBtn)
 
--- ปุ่ม Debug
+-- Debug Button
 local debugBtn = Instance.new("TextButton", mainFrame)
-debugBtn.Size = UDim2.new(0, 80, 0, 35)
-debugBtn.Position = UDim2.new(0.05, 0, 0.7, 0)
-debugBtn.BackgroundColor3 = Color3.fromRGB(120, 120, 250)
+debugBtn.Size = UDim2.new(0, 80, 0, 30)
+debugBtn.Position = UDim2.new(0, 10, 0, 110)
+debugBtn.BackgroundColor3 = Color3.fromRGB(120, 120, 255)
 debugBtn.Text = "Debug"
 debugBtn.TextSize = 18
-debugBtn.TextColor3 = Color3.new(1,1,1)
-debugBtn.Font = Enum.Font.SourceSansBold
-debugBtn.UICorner = Instance.new("UICorner", debugBtn)
+debugBtn.Font = Enum.Font.SourceSans
+debugBtn.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", debugBtn)
 
--- Footer
-local footer = Instance.new("TextLabel", mainFrame)
-footer.Size = UDim2.new(1, -20, 0, 20)
-footer.Position = UDim2.new(0, 10, 1, -25)
-footer.BackgroundTransparency = 1
-footer.Font = Enum.Font.SourceSansItalic
-footer.Text = "Made By Jeab 🐥"
-footer.TextSize = 16
-footer.TextColor3 = Color3.fromRGB(80, 50, 20)
-footer.TextXAlignment = Enum.TextXAlignment.Left
+-- Credit Label
+local credit = Instance.new("TextLabel", mainFrame)
+credit.Size = UDim2.new(1, 0, 0, 20)
+credit.Position = UDim2.new(0, 0, 1, -20)
+credit.BackgroundTransparency = 1
+credit.Font = Enum.Font.SourceSansItalic
+credit.Text = "Made By Jeab 🐥"
+credit.TextSize = 16
+credit.TextColor3 = Color3.fromRGB(80, 50, 20)
 
 -- Debug Frame
-local debugFrame = Instance.new("Frame", screenGui)
-debugFrame.Size = UDim2.new(0, 300, 0, 250)
-debugFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
+debugFrame = Instance.new("Frame", screenGui)
+debugFrame.Size = UDim2.new(0, 300, 0, 200)
+debugFrame.Position = UDim2.new(0, 400, 0, 100)
 debugFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 debugFrame.Visible = false
-debugFrame.Active = true
-debugFrame.Draggable = true
-debugFrame.UICorner = Instance.new("UICorner", debugFrame)
+Instance.new("UICorner", debugFrame)
 
+-- Debug Title
 local debugTitle = Instance.new("TextLabel", debugFrame)
-debugTitle.Size = UDim2.new(1, -60, 0, 35)
+debugTitle.Size = UDim2.new(1, -60, 0, 30)
 debugTitle.Position = UDim2.new(0, 10, 0, 0)
 debugTitle.BackgroundTransparency = 1
 debugTitle.Font = Enum.Font.SourceSansBold
-debugTitle.Text = "🔍 Debug Log"
-debugTitle.TextSize = 20
-debugTitle.TextColor3 = Color3.new(1,1,1)
+debugTitle.Text = "🔎 Debug Log"
+debugTitle.TextSize = 18
+debugTitle.TextColor3 = Color3.new(1, 1, 1)
 debugTitle.TextXAlignment = Enum.TextXAlignment.Left
 
+-- Copy Button
 local copyBtn = Instance.new("TextButton", debugFrame)
-copyBtn.Size = UDim2.new(0, 60, 0, 30)
-copyBtn.Position = UDim2.new(1, -70, 0, 5)
-copyBtn.BackgroundColor3 = Color3.fromRGB(80, 200, 120)
+copyBtn.Size = UDim2.new(0, 50, 0, 25)
+copyBtn.Position = UDim2.new(1, -60, 0, 3)
+copyBtn.BackgroundColor3 = Color3.fromRGB(100, 200, 100)
 copyBtn.Text = "Copy"
 copyBtn.TextSize = 16
-copyBtn.TextColor3 = Color3.new(1,1,1)
 copyBtn.Font = Enum.Font.SourceSansBold
-copyBtn.UICorner = Instance.new("UICorner", copyBtn)
+copyBtn.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", copyBtn)
 
-local debugBox = Instance.new("TextBox", debugFrame)
-debugBox.Size = UDim2.new(1, -20, 1, -50)
-debugBox.Position = UDim2.new(0, 10, 0, 40)
-debugBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-debugBox.ClearTextOnFocus = false
-debugBox.Text = ""
-debugBox.MultiLine = true
-debugBox.TextWrapped = false
-debugBox.TextSize = 16
-debugBox.TextColor3 = Color3.new(1,1,1)
-debugBox.Font = Enum.Font.Code
-debugBox.TextXAlignment = Enum.TextXAlignment.Left
-debugBox.TextYAlignment = Enum.TextYAlignment.Top
-debugBox.UICorner = Instance.new("UICorner", debugBox)
+-- Debug Logs
+logLabel = Instance.new("TextLabel", debugFrame)
+logLabel.Size = UDim2.new(1, -20, 1, -40)
+logLabel.Position = UDim2.new(0, 10, 0, 35)
+logLabel.BackgroundTransparency = 1
+logLabel.Font = Enum.Font.Code
+logLabel.TextSize = 14
+logLabel.TextColor3 = Color3.new(1, 1, 1)
+logLabel.TextXAlignment = Enum.TextXAlignment.Left
+logLabel.TextYAlignment = Enum.TextYAlignment.Top
+logLabel.TextWrapped = true
+logLabel.Text = ""
 
--- // Logic
+-- Variables
 local running = false
-local function log(msg)
-    debugBox.Text = debugBox.Text .. "\n" .. msg
-    debugBox.CursorPosition = #debugBox.Text
-end
+local debugVisible = false
+local minimized = false
 
--- ✅ ฟังก์ชันเลือก Rod โดยไม่สน prefix/buff
-local function getZenithRod()
-    for _, tool in ipairs(backpack:GetChildren()) do
-        if tool:IsA("Tool") and string.match(tool.Name, "Rod Of The Zenith") then
-            return tool
-        end
-    end
-    return nil
-end
-
-local function equipRod()
-    local rod = getZenithRod()
-    if rod then
-        player.Character.Humanoid:EquipTool(rod)
-        log("พบ Scylla → ถือ Rod Of The Zenith")
-    else
-        log("❌ ไม่มี Rod Of The Zenith ใน Backpack")
-    end
-end
-
--- ปุ่มทำงาน
+-- Button Functions
 toggleBtn.MouseButton1Click:Connect(function()
     running = not running
-    if running then
-        toggleBtn.Text = "ปิดการทำงาน"
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(220, 100, 100)
-        log("เริ่ม Auto Scylla Hunt")
-        -- ตัวอย่าง: เวลา detect fish_Scylla
-        equipRod()
-    else
-        toggleBtn.Text = "เปิดการทำงาน"
-        toggleBtn.BackgroundColor3 = Color3.fromRGB(100, 220, 100)
-        log("หยุด Auto Scylla Hunt")
-    end
+    toggleBtn.Text = running and "ปิดการทำงาน" or "เปิดการทำงาน"
+    toggleBtn.BackgroundColor3 = running and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(100, 255, 100)
+    addDebug(running and "เริ่ม Auto Scylla Hunt" or "หยุด Auto Scylla Hunt")
 end)
 
--- ปุ่ม Debug
 debugBtn.MouseButton1Click:Connect(function()
-    debugFrame.Visible = not debugFrame.Visible
+    debugVisible = not debugVisible
+    debugFrame.Visible = debugVisible
 end)
 
--- ปุ่ม Copy
 copyBtn.MouseButton1Click:Connect(function()
-    if setclipboard then
-        setclipboard(debugBox.Text)
-        log("✅ Debug log copied!")
-    else
-        StarterGui:SetCore("SendNotification", {Title="Error", Text="setclipboard ใช้งานไม่ได้", Duration=3})
-    end
+    setclipboard(table.concat(debugLogs, "\n"))
+    addDebug("✅ Debug log copied!")
 end)
 
--- ปุ่ม Minimize
-local minimized = false
+closeBtn.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
 minimizeBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
     if minimized then
-        mainFrame.Size = UDim2.new(0, 260, 0, 40)
-        toggleBtn.Visible = false
-        debugBtn.Visible = false
-        footer.Visible = false
+        mainFrame.Size = UDim2.new(0, 50, 0, 50)
+        for _, v in ipairs(mainFrame:GetChildren()) do
+            if v ~= minimizeBtn then v.Visible = false end
+        end
+        minimizeBtn.Text = "🐥"
     else
-        mainFrame.Size = UDim2.new(0, 260, 0, 180)
-        toggleBtn.Visible = true
-        debugBtn.Visible = true
-        footer.Visible = true
+        mainFrame.Size = UDim2.new(0, 250, 0, 180)
+        for _, v in ipairs(mainFrame:GetChildren()) do
+            v.Visible = true
+        end
+        minimizeBtn.Text = "-"
     end
 end)
 
--- ปุ่ม Close
-closeBtn.MouseButton1Click:Connect(function()
-    screenGui:Destroy()
+-- Auto Hunt loop
+RunService.Heartbeat:Connect(function()
+    if running then
+        local backpack = LocalPlayer.Backpack
+        local rod = nil
+        for _, tool in ipairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") and string.match(tool.Name, "Rod Of The Zenith") then
+                rod = tool
+                break
+            end
+        end
+        if rod and LocalPlayer.Character and not LocalPlayer.Character:FindFirstChild("Rod Of The Zenith") then
+            rod.Parent = LocalPlayer.Character
+            addDebug("พบ Scylla → ถือ Rod")
+        end
+    end
 end)
