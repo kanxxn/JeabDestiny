@@ -58,6 +58,8 @@ LocalPlayer.Chatted:Connect(function(msg)
         scyllaActive = true
     elseif string.find(msg, "The Scylla got away") then
         scyllaActive = false
+    elseif string.find(msg, "has caught the Scylla!") then
+        scyllaActive = false
     end
 end)
 
@@ -65,12 +67,13 @@ end)
 local function mainLoop()
     while isRunning do
         if not scyllaActive then
+            -- ใช้ Sundial ไปเรื่อย ๆ
             useItem(sundialName)
         else
-            -- ใช้ Aurora Totem
+            -- Scylla มาแล้ว → ใช้ Aurora 1 ครั้ง
             useItem(auroraName)
 
-            -- จากนั้น Equip Rod เฉย ๆ
+            -- สลับไปถือ Rod
             equipItem(rodName)
 
             -- รอจน Event จบ
