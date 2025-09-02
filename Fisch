@@ -1,7 +1,8 @@
 --// Auto Scylla Hunt Script (Delta Mobile)
---// Made By Jeab
+--// Made By Jeab 🐥
 
 local sundialName = "Sundial Totem"
+local auroraName = "Aurora Totem"
 local rodName = "Blessed Rod Of The Zenith"
 
 local Players = game:GetService("Players")
@@ -10,13 +11,13 @@ local LocalPlayer = Players.LocalPlayer
 local isRunning = false
 local scyllaActive = false
 
--- ฟังก์ชันใช้ไอเท็ม (บังคับ Equip + ใช้งาน)
+-- ฟังก์ชันใช้ไอเท็ม (บังคับให้สลับแล้วกด)
 local function useItem(itemName)
     local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
     local humanoid = char:WaitForChild("Humanoid")
     local backpack = LocalPlayer.Backpack
 
-    -- ถ้ามีใน Backpack
+    -- ถ้ามีไอเท็มใน Backpack
     local toolInBackpack = backpack:FindFirstChild(itemName)
     if toolInBackpack then
         humanoid:EquipTool(toolInBackpack)
@@ -25,7 +26,7 @@ local function useItem(itemName)
         return true
     end
 
-    -- ถ้าอยู่ในมือแล้ว
+    -- ถ้ามีอยู่ในมือแล้ว
     local tool = char:FindFirstChildOfClass("Tool")
     if tool and tool.Name == itemName then
         tool:Activate()
@@ -34,18 +35,20 @@ local function useItem(itemName)
     return false
 end
 
--- ฟังก์ชันถือเฉย ๆ (ไม่กด)
+-- ฟังก์ชันสลับไปถือ Rod อย่างเดียว
 local function equipItem(itemName)
     local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
     local humanoid = char:WaitForChild("Humanoid")
     local backpack = LocalPlayer.Backpack
 
+    -- ถ้ามีใน Backpack
     local toolInBackpack = backpack:FindFirstChild(itemName)
     if toolInBackpack then
         humanoid:EquipTool(toolInBackpack)
         return true
     end
 
+    -- หรือถืออยู่แล้ว
     local tool = char:FindFirstChildOfClass("Tool")
     if tool and tool.Name == itemName then
         return true
@@ -54,7 +57,7 @@ local function equipItem(itemName)
     return false
 end
 
--- ตรวจจับข้อความในแชท
+-- Detect ข้อความในแชท
 LocalPlayer.Chatted:Connect(function(msg)
     if string.find(msg, "Scylla Hunt has begun!") then
         scyllaActive = true
@@ -72,7 +75,10 @@ local function mainLoop()
             -- ใช้ Sundial ไปเรื่อย ๆ
             useItem(sundialName)
         else
-            -- Scylla มาแล้ว → ถือ Rod อย่างเดียว
+            -- Scylla มาแล้ว → ใช้ Aurora 1 ครั้ง
+            useItem(auroraName)
+
+            -- สลับไปถือ Rod
             equipItem(rodName)
 
             -- รอจน Event จบ
@@ -82,7 +88,7 @@ local function mainLoop()
     end
 end
 
--- GUI
+-- GUI 🐥 โทนเหลืองส้ม
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
@@ -91,75 +97,64 @@ local Frame = Instance.new("Frame")
 Frame.Parent = ScreenGui
 Frame.Size = UDim2.new(0,220,0,130)
 Frame.Position = UDim2.new(0.05,0,0.2,0)
-Frame.BackgroundColor3 = Color3.fromRGB(255, 220, 120)
+Frame.BackgroundColor3 = Color3.fromRGB(255, 210, 100)
 Frame.BorderSizePixel = 0
 Frame.Active = true
 Frame.Draggable = true
-Frame.BackgroundTransparency = 0.05
-Frame.AnchorPoint = Vector2.new(0,0)
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0,15)
-UICorner.Parent = Frame
+-- เงา
+local UICorner = Instance.new("UICorner", Frame)
+UICorner.CornerRadius = UDim.new(0, 15)
 
-local Title = Instance.new("TextLabel")
-Title.Parent = Frame
-Title.Size = UDim2.new(1, -10, 0, 25)
-Title.Position = UDim2.new(0,5,0,5)
-Title.BackgroundTransparency = 1
-Title.Text = "🐥 Auto Scylla Hunt"
-Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 20
-Title.TextColor3 = Color3.fromRGB(200,140,0)
-Title.TextStrokeTransparency = 0.5
+local UIStroke = Instance.new("UIStroke", Frame)
+UIStroke.Thickness = 3
+UIStroke.Color = Color3.fromRGB(255, 160, 50)
 
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Parent = Frame
 ToggleBtn.Size = UDim2.new(0,150,0,40)
 ToggleBtn.Position = UDim2.new(0.5,-75,0.5,-20)
 ToggleBtn.Text = "ปิดการทำงาน"
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(220,120,0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
 ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
 ToggleBtn.Font = Enum.Font.SourceSansBold
-ToggleBtn.TextSize = 18
+ToggleBtn.TextSize = 20
 
-local UICornerBtn = Instance.new("UICorner")
-UICornerBtn.CornerRadius = UDim.new(0,12)
-UICornerBtn.Parent = ToggleBtn
+local UICornerBtn = Instance.new("UICorner", ToggleBtn)
+UICornerBtn.CornerRadius = UDim.new(0,10)
 
 local ExitBtn = Instance.new("TextButton")
 ExitBtn.Parent = Frame
 ExitBtn.Size = UDim2.new(0,28,0,28)
-ExitBtn.Position = UDim2.new(1,-35,0,5)
+ExitBtn.Position = UDim2.new(1,-35,0,7)
 ExitBtn.Text = "X"
-ExitBtn.BackgroundColor3 = Color3.fromRGB(255,100,80)
+ExitBtn.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
 ExitBtn.TextColor3 = Color3.fromRGB(255,255,255)
 ExitBtn.Font = Enum.Font.SourceSansBold
 ExitBtn.TextSize = 16
 
-local UICornerExit = Instance.new("UICorner")
-UICornerExit.CornerRadius = UDim.new(0,10)
-UICornerExit.Parent = ExitBtn
+local UICornerExit = Instance.new("UICorner", ExitBtn)
+UICornerExit.CornerRadius = UDim.new(1,0)
 
 local MadeBy = Instance.new("TextLabel")
 MadeBy.Parent = Frame
-MadeBy.Size = UDim2.new(1,0,0,20)
-MadeBy.Position = UDim2.new(0,0,1,-22)
+MadeBy.Size = UDim2.new(1,0,0,22)
+MadeBy.Position = UDim2.new(0,0,1,-24)
 MadeBy.BackgroundTransparency = 1
-MadeBy.Text = "Made By Jeab"
-MadeBy.TextColor3 = Color3.fromRGB(180,120,0)
+MadeBy.Text = "🐥 Made By Jeab 🐥"
+MadeBy.TextColor3 = Color3.fromRGB(255, 120, 0)
 MadeBy.Font = Enum.Font.SourceSansItalic
-MadeBy.TextSize = 14
+MadeBy.TextSize = 16
 
 ToggleBtn.MouseButton1Click:Connect(function()
     isRunning = not isRunning
     if isRunning then
         ToggleBtn.Text = "เปิดการทำงาน"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0,200,100)
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0,200,0)
         task.spawn(mainLoop)
     else
         ToggleBtn.Text = "ปิดการทำงาน"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(220,120,0)
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
     end
 end)
 
