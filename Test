@@ -1,4 +1,4 @@
--- 🐟 Auto Appraise GUI
+-- 🐟 Auto Appraise GUI + Mutation Picker
 -- Made By Jeab 🐟
 
 local Players = game:GetService("Players")
@@ -7,14 +7,21 @@ local isRunning = false
 local wantedMutation = "Albino" -- ค่า default
 local hotbarSlot = 9
 
--- ================= GUI =================
+-- รายชื่อ Mutation (ตัวอย่าง, คุณสามารถเพิ่มได้เอง)
+local mutationList = {
+    "Albino","Negative","Positive","Twilight",
+    "Radiant","Glowing","Phantom","Storm",
+    "Giant","Mini","Ancient","Toxic"
+}
+
+-- ================= GUI หลัก =================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame")
 Frame.Parent = ScreenGui
-Frame.Size = UDim2.new(0, 250, 0, 160)
+Frame.Size = UDim2.new(0, 260, 0, 180)
 Frame.Position = UDim2.new(0.05, 0, 0.25, 0)
 Frame.BackgroundColor3 = Color3.fromRGB(180, 220, 255)
 Frame.Active = true
@@ -33,7 +40,7 @@ Title.TextColor3 = Color3.fromRGB(0, 50, 150)
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Parent = Frame
 ToggleBtn.Size = UDim2.new(0, 180, 0, 40)
-ToggleBtn.Position = UDim2.new(0.5, -90, 0.4, 0)
+ToggleBtn.Position = UDim2.new(0.5, -90, 0.35, 0)
 ToggleBtn.Text = "Start"
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 60)
 ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -41,10 +48,31 @@ ToggleBtn.Font = Enum.Font.SourceSansBold
 ToggleBtn.TextSize = 18
 Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 10)
 
+local MutationBtn = Instance.new("TextButton")
+MutationBtn.Parent = Frame
+MutationBtn.Size = UDim2.new(0, 120, 0, 30)
+MutationBtn.Position = UDim2.new(0.05, 0, 0.65, 0)
+MutationBtn.Text = "เลือก Mutation"
+MutationBtn.BackgroundColor3 = Color3.fromRGB(100, 140, 220)
+MutationBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MutationBtn.Font = Enum.Font.SourceSansBold
+MutationBtn.TextSize = 16
+Instance.new("UICorner", MutationBtn).CornerRadius = UDim.new(0, 8)
+
+local HotbarLabel = Instance.new("TextLabel")
+HotbarLabel.Parent = Frame
+HotbarLabel.Size = UDim2.new(0, 50, 0, 25)
+HotbarLabel.Position = UDim2.new(0.65, 0, 0.65, 0)
+HotbarLabel.BackgroundTransparency = 1
+HotbarLabel.Text = tostring(hotbarSlot)
+HotbarLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+HotbarLabel.Font = Enum.Font.SourceSansBold
+HotbarLabel.TextSize = 18
+
 local MutationLabel = Instance.new("TextLabel")
 MutationLabel.Parent = Frame
 MutationLabel.Size = UDim2.new(1, -10, 0, 25)
-MutationLabel.Position = UDim2.new(0, 5, 0.75, 0)
+MutationLabel.Position = UDim2.new(0, 5, 0.85, 0)
 MutationLabel.BackgroundTransparency = 1
 MutationLabel.Text = "🎯 Mutation: " .. wantedMutation
 MutationLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -62,6 +90,45 @@ ExitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ExitBtn.Font = Enum.Font.SourceSansBold
 ExitBtn.TextSize = 16
 Instance.new("UICorner", ExitBtn).CornerRadius = UDim.new(1, 0)
+
+-- ================= GUI Mutation Picker =================
+local PickerFrame = Instance.new("Frame")
+PickerFrame.Parent = ScreenGui
+PickerFrame.Size = UDim2.new(0, 300, 0, 300)
+PickerFrame.Position = UDim2.new(0.4, 0, 0.25, 0)
+PickerFrame.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+PickerFrame.Visible = false
+Instance.new("UICorner", PickerFrame).CornerRadius = UDim.new(0, 12)
+
+local PickerScroll = Instance.new("ScrollingFrame")
+PickerScroll.Parent = PickerFrame
+PickerScroll.Size = UDim2.new(1, -10, 1, -10)
+PickerScroll.Position = UDim2.new(0, 5, 0, 5)
+PickerScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+PickerScroll.ScrollBarThickness = 8
+
+local UIGrid = Instance.new("UIGridLayout")
+UIGrid.CellSize = UDim2.new(0, 90, 0, 30)
+UIGrid.CellPadding = UDim2.new(0, 5, 0, 5)
+UIGrid.Parent = PickerScroll
+
+for _, m in ipairs(mutationList) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 90, 0, 30)
+    btn.Text = m
+    btn.BackgroundColor3 = Color3.fromRGB(200, 200, 250)
+    btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 14
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    btn.Parent = PickerScroll
+
+    btn.MouseButton1Click:Connect(function()
+        wantedMutation = m
+        MutationLabel.Text = "🎯 Mutation: " .. wantedMutation
+        PickerFrame.Visible = false
+    end)
+end
 
 -- ================= Function =================
 local function equipHotbar(slot)
@@ -83,18 +150,15 @@ local function clickButtonWithText(txt)
 end
 
 -- ================= Mutation Detect =================
-local chat = LocalPlayer:WaitForChild("PlayerGui"):WaitForChild("Chat")
-
-chat.DescendantAdded:Connect(function(desc)
+LocalPlayer.PlayerGui.DescendantAdded:Connect(function(desc)
     if desc:IsA("TextLabel") and desc.Text:find("is now mutated with") then
         local mutation = string.match(desc.Text, "mutated with%s+(%w+)")
         if mutation then
-            print("🐟 ได้ Mutation:", mutation)
             if mutation == wantedMutation then
-                print("✅ ตรงกับที่เลือก หยุดการทำงาน")
                 isRunning = false
                 ToggleBtn.Text = "Start"
                 ToggleBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 60)
+                print("✅ ได้ Mutation ที่ต้องการ:", mutation)
             end
         end
     end
@@ -104,16 +168,13 @@ end)
 task.spawn(function()
     while true do
         if isRunning then
-            -- ถือปลาใน hotbar
             equipHotbar(hotbarSlot)
 
-            -- คลิกปุ่ม "Can you appraise this fish?"
             if clickButtonWithText("Can you appraise this fish?") then
                 task.wait(0.5)
                 clickButtonWithText("Yes!")
             end
 
-            -- เว้นดีเลย์ให้ NPC reset
             task.wait(1.5)
         end
         task.wait(0.1)
@@ -130,6 +191,10 @@ ToggleBtn.MouseButton1Click:Connect(function()
         ToggleBtn.Text = "Start"
         ToggleBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 60)
     end
+end)
+
+MutationBtn.MouseButton1Click:Connect(function()
+    PickerFrame.Visible = true
 end)
 
 ExitBtn.MouseButton1Click:Connect(function()
