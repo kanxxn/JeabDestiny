@@ -1,186 +1,143 @@
--- 🐟 Auto Appraise GUI (With Mutation Selector)
--- Made by Jeab 🐥
-
+--// Auto Appraise Script
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+
+-- Variables
 local running = false
-local selectedMutation = "Albino" -- ค่าเริ่มต้น
-local hotbarSlot = Enum.KeyCode.Nine -- slot 9
+local selectedMutation = "Albino"
 
--- Mutation ที่มีทั้งหมด
-local mutations = {
-    "Albino","Negative","Goliath","Mini","Golden",
-    "Shadow","Radioactive","Glitched","Infernal","Heavenly"
-}
+--// UI Creation
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AutoAppraiseGui"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
--- ฟังก์ชันกดปุ่มใน Dialogue
-local function clickDialogue(optionText)
-    local playerGui = LocalPlayer:WaitForChild("PlayerGui")
-    for _,desc in ipairs(playerGui:GetDescendants()) do
-        if desc:IsA("TextButton") and string.find(desc.Text, optionText) then
-            desc.Activated:Fire()
-            return true
-        end
-    end
-    return false
-end
-
--- ฟังก์ชันเช็ค Mutation ได้แล้ว
-local function checkMutation(msg)
-    if string.find(msg, "is now mutated with") then
-        local found = msg:match("mutated with%s+(%w+)")
-        if found then
-            if found == selectedMutation then
-                running = false
-                StatusLabel.Text = "🎉 ได้ Mutation: "..found.." แล้ว!"
-                StartBtn.Text = "Start"
-                StartBtn.BackgroundColor3 = Color3.fromRGB(80,180,60)
-            else
-                StatusLabel.Text = "❌ ได้ "..found.." → กำลังวนต่อ..."
-            end
-        end
-    end
-end
-
--- Auto Loop
-local function autoAppraise()
-    while task.wait(2) do
-        if running and selectedMutation then
-            -- 1. ถือปลา (slot 9)
-            game:GetService("VirtualInputManager"):SendKeyEvent(true, hotbarSlot, false, game)
-            task.wait(0.5)
-
-            -- 2. กด "Can you appraise this fish?"
-            clickDialogue("Can you appraise this fish?")
-            task.wait(0.5)
-
-            -- 3. กด "Yes!"
-            clickDialogue("Yes!")
-        end
-    end
-end
-
--- GUI ==================
-local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-ScreenGui.ResetOnSpawn = false
-
-local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0,250,0,180)
-Frame.Position = UDim2.new(0.05,0,0.25,0)
-Frame.BackgroundColor3 = Color3.fromRGB(180,220,255)
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 280, 0, 200)
+Frame.Position = UDim2.new(0.5, -140, 0.5, -100)
+Frame.BackgroundColor3 = Color3.fromRGB(173, 216, 230)
 Frame.Active = true
 Frame.Draggable = true
-Frame.BorderSizePixel = 0
-Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,12)
+Frame.Parent = ScreenGui
 
-local Title = Instance.new("TextLabel", Frame)
-Title.Size = UDim2.new(1,0,0,30)
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
 Title.BackgroundTransparency = 1
 Title.Text = "🐟 Auto Appraise"
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 20
-Title.TextColor3 = Color3.fromRGB(0,50,150)
+Title.Parent = Frame
 
--- Start / Stop Button
-StartBtn = Instance.new("TextButton", Frame)
-StartBtn.Size = UDim2.new(0,150,0,40)
-StartBtn.Position = UDim2.new(0.5,-75,0.3,0)
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -30, 0, 0)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+CloseBtn.Parent = Frame
+CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
+
+local StartBtn = Instance.new("TextButton")
+StartBtn.Size = UDim2.new(0.8, 0, 0, 50)
+StartBtn.Position = UDim2.new(0.1, 0, 0.2, 0)
 StartBtn.Text = "Start"
-StartBtn.BackgroundColor3 = Color3.fromRGB(80,180,60)
-StartBtn.TextColor3 = Color3.fromRGB(255,255,255)
+StartBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 60)
+StartBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 StartBtn.Font = Enum.Font.SourceSansBold
-StartBtn.TextSize = 20
-Instance.new("UICorner", StartBtn).CornerRadius = UDim.new(0,10)
+StartBtn.TextSize = 22
+StartBtn.Parent = Frame
 
--- ปุ่มเลือก Mutation
-local SelectBtn = Instance.new("TextButton", Frame)
-SelectBtn.Size = UDim2.new(0,120,0,30)
-SelectBtn.Position = UDim2.new(0.5,-60,0.6,0)
-SelectBtn.Text = "เลือก Mutation"
-SelectBtn.BackgroundColor3 = Color3.fromRGB(100,140,255)
-SelectBtn.TextColor3 = Color3.fromRGB(255,255,255)
-SelectBtn.Font = Enum.Font.SourceSansBold
-SelectBtn.TextSize = 16
-Instance.new("UICorner", SelectBtn).CornerRadius = UDim.new(0,8)
+local MutationBtn = Instance.new("TextButton")
+MutationBtn.Size = UDim2.new(0.8, 0, 0, 40)
+MutationBtn.Position = UDim2.new(0.1, 0, 0.55, 0)
+MutationBtn.Text = "🎯 Mutation: " .. selectedMutation
+MutationBtn.BackgroundColor3 = Color3.fromRGB(100, 140, 220)
+MutationBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MutationBtn.Font = Enum.Font.SourceSans
+MutationBtn.TextSize = 18
+MutationBtn.Parent = Frame
 
--- Label แสดง Mutation ที่เลือก
-StatusLabel = Instance.new("TextLabel", Frame)
-StatusLabel.Size = UDim2.new(1,0,0,30)
-StatusLabel.Position = UDim2.new(0,0,0.85,0)
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, 0, 0, 30)
+StatusLabel.Position = UDim2.new(0, 0, 0.8, 0)
 StatusLabel.BackgroundTransparency = 1
-StatusLabel.Text = "🔎 Mutation: "..selectedMutation
-StatusLabel.TextColor3 = Color3.fromRGB(80,0,120)
-StatusLabel.Font = Enum.Font.SourceSansBold
-StatusLabel.TextSize = 16
+StatusLabel.Text = "⏳ รอเริ่มทำงาน..."
+StatusLabel.Font = Enum.Font.SourceSans
+StatusLabel.TextSize = 18
+StatusLabel.Parent = Frame
 
--- ปุ่มปิด
-local ExitBtn = Instance.new("TextButton", Frame)
-ExitBtn.Size = UDim2.new(0,28,0,28)
-ExitBtn.Position = UDim2.new(1,-35,0,6)
-ExitBtn.Text = "X"
-ExitBtn.BackgroundColor3 = Color3.fromRGB(200,60,60)
-ExitBtn.TextColor3 = Color3.fromRGB(255,255,255)
-ExitBtn.Font = Enum.Font.SourceSansBold
-ExitBtn.TextSize = 16
-Instance.new("UICorner", ExitBtn).CornerRadius = UDim.new(1,0)
+local Credit = Instance.new("TextLabel")
+Credit.Size = UDim2.new(1, 0, 0, 20)
+Credit.Position = UDim2.new(0, 0, 1, -20)
+Credit.BackgroundTransparency = 1
+Credit.Text = "Made By Jeab"
+Credit.Font = Enum.Font.SourceSansItalic
+Credit.TextSize = 14
+Credit.TextColor3 = Color3.fromRGB(50, 50, 50)
+Credit.Parent = Frame
 
--- Events ==================
+-- Mutation list
+local mutations = {"Albino","Negative","Glowing","Golden","Shadow","Radiant","Crystal"}
+local mutationIndex = 1
 
--- ปิด GUI
-ExitBtn.MouseButton1Click:Connect(function()
-    running = false
-    ScreenGui:Destroy()
+MutationBtn.MouseButton1Click:Connect(function()
+    mutationIndex = mutationIndex + 1
+    if mutationIndex > #mutations then
+        mutationIndex = 1
+    end
+    selectedMutation = mutations[mutationIndex]
+    MutationBtn.Text = "🎯 Mutation: " .. selectedMutation
 end)
 
--- Toggle Start
+-- Function to simulate appraisal loop
+local function startAppraise()
+    running = true
+    StartBtn.Text = "Stop"
+    StartBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+    StatusLabel.Text = "▶ เริ่มทำงาน..."
+
+    while running do
+        -- จำลองขั้นตอน
+        -- 1. ถือปลา slot 9
+        -- 2. คลิก "Can you appraise this fish?"
+        -- 3. คลิก "Yes!"
+        -- (เพิ่ม Remote Event ตรงนี้เองทีหลัง)
+        wait(2) -- ดีเลย์จำลอง
+    end
+end
+
 StartBtn.MouseButton1Click:Connect(function()
-    running = not running
     if running then
-        StartBtn.Text = "Stop"
-        StartBtn.BackgroundColor3 = Color3.fromRGB(220,80,40)
-        StatusLabel.Text = "🔄 กำลังทำงาน... รอ Mutation: "..selectedMutation
-    else
+        running = false
         StartBtn.Text = "Start"
-        StartBtn.BackgroundColor3 = Color3.fromRGB(80,180,60)
+        StartBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 60)
         StatusLabel.Text = "⏸ หยุดทำงาน"
+    else
+        startAppraise()
     end
 end)
 
--- เลือก Mutation
-SelectBtn.MouseButton1Click:Connect(function()
-    -- Popup เลือก Mutation
-    local popup = Instance.new("Frame", ScreenGui)
-    popup.Size = UDim2.new(0,200,0,200)
-    popup.Position = UDim2.new(0.5,-100,0.5,-100)
-    popup.BackgroundColor3 = Color3.fromRGB(240,240,240)
-    Instance.new("UICorner", popup).CornerRadius = UDim.new(0,12)
+-- Detect Mutation UI messages
+local function monitorUI()
+    local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+    playerGui.DescendantAdded:Connect(function(desc)
+        if desc:IsA("TextLabel") and desc.Text ~= "" then
+            local text = desc.Text
+            if string.find(text, "is now mutated with") then
+                local found = text:match("mutated with%s+(%w+)")
+                if found then
+                    if found == selectedMutation then
+                        running = false
+                        StatusLabel.Text = "🎉 ได้ Mutation: "..found.." แล้ว!"
+                        StartBtn.Text = "Start"
+                        StartBtn.BackgroundColor3 = Color3.fromRGB(80,180,60)
+                    else
+                        StatusLabel.Text = "❌ ได้ "..found.." → กำลังวนต่อ..."
+                    end
+                end
+            end
+        end
+    end)
+end
 
-    local UIGrid = Instance.new("UIGridLayout", popup)
-    UIGrid.CellSize = UDim2.new(0,90,0,30)
-    UIGrid.FillDirectionMaxCells = 2
-    UIGrid.SortOrder = Enum.SortOrder.LayoutOrder
-
-    for _,mut in ipairs(mutations) do
-        local btn = Instance.new("TextButton", popup)
-        btn.Text = mut
-        btn.BackgroundColor3 = Color3.fromRGB(120,160,255)
-        btn.TextColor3 = Color3.new(1,1,1)
-        btn.Font = Enum.Font.SourceSansBold
-        btn.TextSize = 14
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-
-        btn.MouseButton1Click:Connect(function()
-            selectedMutation = mut
-            StatusLabel.Text = "🔎 Mutation: "..selectedMutation
-            popup:Destroy()
-        end)
-    end
-end)
-
--- ฟัง ChatLog เพื่อหาว่าได้ Mutation หรือยัง
-LocalPlayer.Chatted:Connect(function(msg)
-    checkMutation(msg)
-end)
-
--- รัน Loop หลัก
-task.spawn(autoAppraise)
+monitorUI()
