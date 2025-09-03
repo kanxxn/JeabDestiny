@@ -1,10 +1,58 @@
-local PlayerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+-- 🔧 NPC Dialogue Debug Spy
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+local UIS = game:GetService("UserInputService")
 
+-- GUI หลัก
+local ScreenGui = Instance.new("ScreenGui", PlayerGui)
+ScreenGui.Name = "DialogueDebugSpy"
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 350, 0, 200)
+Frame.Position = UDim2.new(0.3, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.Active = true
+Frame.Draggable = true -- ✅ ทำให้ลากได้
+Frame.Visible = true
+
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(1, 0, 0, 25)
+Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Title.Text = "🕵️ Dialogue Debug Spy"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 18
+
+local Scrolling = Instance.new("ScrollingFrame", Frame)
+Scrolling.Size = UDim2.new(1, 0, 1, -25)
+Scrolling.Position = UDim2.new(0, 0, 0, 25)
+Scrolling.CanvasSize = UDim2.new(0, 0, 5, 0)
+Scrolling.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Scrolling.ScrollBarThickness = 6
+
+-- ฟังก์ชันเพิ่ม Log
+local function AddLog(msg)
+    local label = Instance.new("TextLabel", Scrolling)
+    label.Size = UDim2.new(1, -5, 0, 20)
+    label.Position = UDim2.new(0, 0, 0, #Scrolling:GetChildren() * 20)
+    label.BackgroundTransparency = 1
+    label.Text = msg
+    label.TextColor3 = Color3.fromRGB(200, 200, 200)
+    label.Font = Enum.Font.Code
+    label.TextSize = 14
+    Scrolling.CanvasSize = UDim2.new(0, 0, 0, #Scrolling:GetChildren() * 20)
+end
+
+-- ✅ ตรวจจับ UI เด้ง
 PlayerGui.ChildAdded:Connect(function(child)
-    warn("📌 UI โผล่:", child.Name)
+    AddLog("📌 UI โผล่: " .. child.Name)
     child.DescendantAdded:Connect(function(obj)
         if obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("TextLabel") then
-            warn("   🔎 พบ:", obj.ClassName, obj.Name, "Text=", obj.Text)
+            local text = (obj.Text and obj.Text ~= "") and obj.Text or " "
+            AddLog("   🔎 " .. obj.ClassName .. " | " .. obj.Name .. " | Text=" .. text)
         end
     end)
 end)
+
+AddLog("✅ Dialogue Debug Spy พร้อมใช้งานแล้ว กด E คุยกับ NPC ดูสิ!")
