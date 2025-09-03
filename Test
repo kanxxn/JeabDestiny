@@ -1,64 +1,45 @@
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+-- ปุ่มจาก GUI เดิม
+local ToggleBtn = Frame:WaitForChild("ToggleBtn")  -- ปุ่ม Start/Stop
+local MutationLabel = Frame:WaitForChild("MutationLabel") -- Text แสดง Mutation ที่เลือก
+local SlotBox = Frame:WaitForChild("SlotBox") -- ช่องใส่ slot (9)
 
 local isRunning = false
-local targetMutation = "Albino"  -- Mutation ที่ต้องการ
-local hotbarSlot = 9
 local firstYes = true
+local targetMutation = "Albino"
+local hotbarSlot = 9
 
--- ฟังก์ชันหา TextButton ตามข้อความ
+-- ฟังก์ชัน Reset
+local function resetAll()
+    isRunning = false
+    firstYes = true
+    ToggleBtn.Text = "Start"
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(80,180,60)
+    print("🔄 Reset Complete: Ready for next run")
+end
+
+-- หา TextButton ใน GUI ของเกม
 local function findButton(text)
-    for _, gui in ipairs(PlayerGui:GetDescendants()) do
+    for _, gui in ipairs(game.Players.LocalPlayer.PlayerGui:GetDescendants()) do
         if gui:IsA("TextButton") and string.find(gui.Text, text) then
             return gui
         end
     end
 end
 
--- ฟังก์ชันกดปุ่ม
+-- คลิกปุ่ม
 local function clickButton(btn)
-    if btn and btn:IsA("TextButton") then
+    if btn then
         game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,true,btn,0)
         task.wait(0.1)
         game:GetService("VirtualInputManager"):SendMouseButtonEvent(0,0,0,false,btn,0)
     end
 end
 
--- ฟังก์ชันหยิบ slot
-local function equipSlot(slot)
-    local backpack = LocalPlayer.Backpack
-    local char = LocalPlayer.Character
-    if not char then return end
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        local tool = backpack:FindFirstChildWhichIsA("Tool")
-        if tool then
-            humanoid:EquipTool(tool)
-            task.wait(0.2)
-        end
-    end
-end
-
--- ฟังก์ชันรีเซ็ตทั้งหมด
-local function resetAll()
-    isRunning = false
-    firstYes = true
-    if ToggleBtn then
-        ToggleBtn.Text = "Start"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(80,180,60)
-    end
-    print("🔄 Reset Complete: Ready for next run")
-end
-
--- ลูป Auto Appraise
+-- ฟังก์ชันหลัก Auto Appraise
 local function autoAppraise()
     task.spawn(function()
         while isRunning do
             task.wait(0.6)
-
-            -- ถือ slot 9
-            equipSlot(hotbarSlot)
 
             if firstYes then
                 local appraiseBtn = findButton("Can you appraise this fish?")
@@ -75,11 +56,11 @@ local function autoAppraise()
                 if appraiseBtn then clickButton(appraiseBtn) task.wait(1.2) end
             end
 
-            -- ตรวจจับ Mutation ที่ต้องการ
-            for _, gui in ipairs(PlayerGui:GetDescendants()) do
+            -- ตรวจจับ Mutation
+            for _, gui in ipairs(game.Players.LocalPlayer.PlayerGui:GetDescendants()) do
                 if gui:IsA("TextLabel") and string.find(string.lower(gui.Text), string.lower(targetMutation)) then
                     warn("🎉 Found Mutation:", targetMutation)
-                    resetAll()  -- หยุด + รีเซ็ตอัตโนมัติ
+                    resetAll()
                     return
                 end
             end
@@ -87,28 +68,23 @@ local function autoAppraise()
     end)
 end
 
--- Detect ว่าเริ่มคุยกับ NPC แล้ว
-PlayerGui.DescendantAdded:Connect(function(obj)
-    if not isRunning and obj:IsA("TextLabel") and string.find(obj.Text, "Can you appraise this fish?") then
-        if not isRunning then
-            print("▶️ Auto Appraise Started")
-            isRunning = true
-            firstYes = true
-            autoAppraise()
-        end
+-- Detect ตอนผู้เล่นกด E แล้วคุย NPC
+game.Players.LocalPlayer.PlayerGui.DescendantAdded:Connect(function(obj)
+    if isRunning and obj:IsA("TextLabel") and string.find(obj.Text, "Can you appraise this fish?") then
+        print("▶️ Auto Appraise Started")
+        firstYes = true
+        autoAppraise()
     end
 end)
 
--- ปุ่มเปิด/ปิดการทำงานเอง
+-- ปุ่ม Start/Stop
 ToggleBtn.MouseButton1Click:Connect(function()
+    isRunning = not isRunning
     if isRunning then
-        print("⛔ Stopped by User")
-        resetAll()
-    else
-        print("✅ Ready: Press E to talk NPC")
-        isRunning = false
-        firstYes = true
         ToggleBtn.Text = "Stop"
         ToggleBtn.BackgroundColor3 = Color3.fromRGB(220,80,40)
+        print("✅ Ready: Press E to talk NPC")
+    else
+        resetAll()
     end
 end)
