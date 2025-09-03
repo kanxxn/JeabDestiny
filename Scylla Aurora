@@ -1,4 +1,4 @@
--- 🐥 วันไหนกูบ้ากูล่ามึงแน่ (Auto Scylla + Aurora + Debug) 🐥
+-- 🐥 กูจะล่าแบ้ (Auto Scylla + Aurora + Debug) 🐥
 -- Made By Jeab 🐥
 
 local sundialName = "Sundial Totem"
@@ -97,7 +97,7 @@ local Title = Instance.new("TextLabel")
 Title.Parent = Frame
 Title.Size = UDim2.new(1,0,0,30)
 Title.BackgroundTransparency = 1
-Title.Text = "🐥 วันไหนกูบ้ากูล่ามึงแน่ 🐥"
+Title.Text = "🐥 กูจะล่าแบ้ 🐥"
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 18
 Title.TextColor3 = Color3.fromRGB(255,230,0)
