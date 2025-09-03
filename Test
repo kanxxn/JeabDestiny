@@ -1,114 +1,29 @@
--- 🛰️ Remote Spy (Mobile Friendly)
--- กดลากได้, ปุ่มปิด, ปุ่ม Clear, Scroll ได้
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- สร้าง GUI
-local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-ScreenGui.ResetOnSpawn = false
+-- Detect เวลา UI โผล่
+PlayerGui.ChildAdded:Connect(function(child)
+    -- ถ้าชื่อ UI มีคำว่า "Dialogue" หรือ "Chat" ให้ลองเช็ก
+    if string.find(string.lower(child.Name), "dialogue") or string.find(string.lower(child.Name), "chat") then
+        warn("✅ เริ่มคุยกับ NPC แล้ว → พยายามกด Option 1")
+        
+        task.wait(0.5) -- รอ UI โหลดครบ
 
-local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0,300,0,180)
-Frame.Position = UDim2.new(0.35,0,0.2,0)
-Frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
-Frame.Active = true
-Frame.Draggable = true
-Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,8)
-
--- Title Bar
-local Title = Instance.new("TextLabel", Frame)
-Title.Size = UDim2.new(1,0,0,28)
-Title.BackgroundColor3 = Color3.fromRGB(50,50,50)
-Title.Text = "🛰️ Remote Spy"
-Title.TextColor3 = Color3.fromRGB(255,255,255)
-Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 16
-
--- ปุ่ม Close
-local CloseBtn = Instance.new("TextButton", Frame)
-CloseBtn.Size = UDim2.new(0,28,0,28)
-CloseBtn.Position = UDim2.new(1,-30,0,0)
-CloseBtn.Text = "X"
-CloseBtn.BackgroundColor3 = Color3.fromRGB(150,50,50)
-CloseBtn.TextColor3 = Color3.fromRGB(255,255,255)
-CloseBtn.Font = Enum.Font.SourceSansBold
-CloseBtn.TextSize = 16
-Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1,0)
-
--- ปุ่ม Clear
-local ClearBtn = Instance.new("TextButton", Frame)
-ClearBtn.Size = UDim2.new(0,50,0,22)
-ClearBtn.Position = UDim2.new(0,5,0,3)
-ClearBtn.Text = "Clear"
-ClearBtn.BackgroundColor3 = Color3.fromRGB(80,80,150)
-ClearBtn.TextColor3 = Color3.fromRGB(255,255,255)
-ClearBtn.Font = Enum.Font.SourceSansBold
-ClearBtn.TextSize = 14
-Instance.new("UICorner", ClearBtn).CornerRadius = UDim.new(0,6)
-
--- Scrolling Log Box
-local LogBox = Instance.new("ScrollingFrame", Frame)
-LogBox.Size = UDim2.new(1,0,1,-30)
-LogBox.Position = UDim2.new(0,0,0,30)
-LogBox.CanvasSize = UDim2.new(0,0,0,0)
-LogBox.ScrollBarThickness = 6
-LogBox.BackgroundTransparency = 1
-
-local UIList = Instance.new("UIListLayout", LogBox)
-UIList.SortOrder = Enum.SortOrder.LayoutOrder
-
--- Log function
-local function log(msg)
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(1,0,0,18)
-    lbl.BackgroundTransparency = 1
-    lbl.TextColor3 = Color3.fromRGB(200,200,200)
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Font = Enum.Font.SourceSans
-    lbl.TextSize = 13
-    lbl.Text = msg
-    lbl.Parent = LogBox
-    LogBox.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y)
-    LogBox.CanvasPosition = Vector2.new(0, LogBox.CanvasSize.Y.Offset)
-end
-
--- Clear Log
-ClearBtn.MouseButton1Click:Connect(function()
-    for _,v in pairs(LogBox:GetChildren()) do
-        if v:IsA("TextLabel") then v:Destroy() end
-    end
-    LogBox.CanvasSize = UDim2.new(0,0,0,0)
-end)
-
--- Close GUI
-CloseBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
-
--- Hook Remote Calls
-local mt = getrawmetatable(game)
-local old = mt.__namecall
-setreadonly(mt, false)
-
-mt.__namecall = newcclosure(function(self, ...)
-    local method = getnamecallmethod()
-    local args = {...}
-    if method == "FireServer" or method == "InvokeServer" then
-        local argStr = {}
-        for i,v in ipairs(args) do
-            if typeof(v) == "string" then
-                table.insert(argStr, '"'..v..'"')
-            elseif typeof(v) == "Instance" then
-                table.insert(argStr, v:GetFullName())
-            else
-                table.insert(argStr, tostring(v))
+        -- หาปุ่มตัวเลือก
+        for _, obj in pairs(child:GetDescendants()) do
+            if obj:IsA("TextButton") and string.find(obj.Text, "appraise") then
+                task.wait(0.2)
+                obj:Activate() -- หรือ obj.MouseButton1Click:Fire() 
+                warn("🎯 กดเลือก: Can you appraise this fish?")
             end
         end
-        log(self:GetFullName() .. " : " .. method .. " (" .. table.concat(argStr,", ") .. ")")
     end
-    return old(self, ...)
 end)
 
-setreadonly(mt, true)
-
-log("✅ Remote Spy Started (ลากได้, Clear ได้)")
+-- Detect เวลาเลิกคุย
+PlayerGui.ChildRemoved:Connect(function(child)
+    if string.find(string.lower(child.Name), "dialogue") or string.find(string.lower(child.Name), "chat") then
+        warn("❌ จบบทสนทนาแล้ว")
+    end
+end)
