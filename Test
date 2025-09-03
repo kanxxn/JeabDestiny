@@ -1,29 +1,10 @@
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local PlayerGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
--- Detect เวลา UI โผล่
 PlayerGui.ChildAdded:Connect(function(child)
-    -- ถ้าชื่อ UI มีคำว่า "Dialogue" หรือ "Chat" ให้ลองเช็ก
-    if string.find(string.lower(child.Name), "dialogue") or string.find(string.lower(child.Name), "chat") then
-        warn("✅ เริ่มคุยกับ NPC แล้ว → พยายามกด Option 1")
-        
-        task.wait(0.5) -- รอ UI โหลดครบ
-
-        -- หาปุ่มตัวเลือก
-        for _, obj in pairs(child:GetDescendants()) do
-            if obj:IsA("TextButton") and string.find(obj.Text, "appraise") then
-                task.wait(0.2)
-                obj:Activate() -- หรือ obj.MouseButton1Click:Fire() 
-                warn("🎯 กดเลือก: Can you appraise this fish?")
-            end
+    warn("📌 UI โผล่:", child.Name)
+    child.DescendantAdded:Connect(function(obj)
+        if obj:IsA("TextButton") or obj:IsA("ImageButton") or obj:IsA("TextLabel") then
+            warn("   🔎 พบ:", obj.ClassName, obj.Name, "Text=", obj.Text)
         end
-    end
-end)
-
--- Detect เวลาเลิกคุย
-PlayerGui.ChildRemoved:Connect(function(child)
-    if string.find(string.lower(child.Name), "dialogue") or string.find(string.lower(child.Name), "chat") then
-        warn("❌ จบบทสนทนาแล้ว")
-    end
+    end)
 end)
