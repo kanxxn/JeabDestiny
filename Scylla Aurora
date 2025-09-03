@@ -1,4 +1,4 @@
--- 🐥 กูจะล่าแบ้ (Auto Scylla + Aurora + Debug) 🐥
+-- 🐥 วันไหนกูบ้าโดนกูล่าแน่ (Auto Scylla + Aurora + Debug) 🐥
 -- Made By Jeab 🐥
 
 local sundialName = "Sundial Totem"
@@ -13,6 +13,7 @@ local isRunning = false
 local scyllaActive = false
 local debugVisible = false
 local auroraMode = false -- ✅ Checkbox Aurora Mode
+local uiMinimized = false -- ✅ สถานะย่อ/ขยาย UI
 
 -- Debug Log
 local debugLines = {}
@@ -61,7 +62,7 @@ local function equipItem(itemKeyword)
     return false
 end
 
--- Detect Aurora Active (จากมุมขวาล่างมีไอคอน Aurora)
+-- Detect Aurora Active
 local function isAuroraActive()
     local statusUI = LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("StatusUI")
     if statusUI and statusUI:FindFirstChild("AuroraActive") then
@@ -84,7 +85,7 @@ ScreenGui.ResetOnSpawn = false
 -- Frame หลัก
 local Frame = Instance.new("Frame")
 Frame.Parent = ScreenGui
-Frame.Size = UDim2.new(0,220,0,180)
+Frame.Size = UDim2.new(0,180,0,150) -- ✅ ปรับขนาดใหม่ตาม Fisch UI
 Frame.Position = UDim2.new(0.05,0,0.25,0)
 Frame.BackgroundColor3 = Color3.fromRGB(40,20,60) -- ม่วงเข้ม
 Frame.Active = true
@@ -92,45 +93,77 @@ Frame.Draggable = true
 Frame.BorderSizePixel = 0
 Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,12)
 
--- Title
+-- Title Bar
+local TitleBar = Instance.new("Frame")
+TitleBar.Parent = Frame
+TitleBar.Size = UDim2.new(1,0,0,28)
+TitleBar.BackgroundColor3 = Color3.fromRGB(60,30,90)
+Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0,12)
+
 local Title = Instance.new("TextLabel")
-Title.Parent = Frame
-Title.Size = UDim2.new(1,0,0,30)
+Title.Parent = TitleBar
+Title.Size = UDim2.new(1,-50,1,0)
+Title.Position = UDim2.new(0,10,0,0)
 Title.BackgroundTransparency = 1
-Title.Text = "🐥 กูจะล่าแบ้ 🐥"
+Title.Text = "🐥 Auto Scylla Hunt 🐥"
 Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 18
+Title.TextSize = 16
 Title.TextColor3 = Color3.fromRGB(255,230,0)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- ปุ่มย่อ "-"
+local MinBtn = Instance.new("TextButton")
+MinBtn.Parent = TitleBar
+MinBtn.Size = UDim2.new(0,28,0,28)
+MinBtn.Position = UDim2.new(1,-56,0,0)
+MinBtn.Text = "-"
+MinBtn.BackgroundColor3 = Color3.fromRGB(80,40,120)
+MinBtn.TextColor3 = Color3.fromRGB(255,255,255)
+MinBtn.Font = Enum.Font.SourceSansBold
+MinBtn.TextSize = 20
+Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0,8)
+
+-- ปุ่มปิด "X"
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = TitleBar
+CloseBtn.Size = UDim2.new(0,28,0,28)
+CloseBtn.Position = UDim2.new(1,-28,0,0)
+CloseBtn.Text = "X"
+CloseBtn.BackgroundColor3 = Color3.fromRGB(150,50,50)
+CloseBtn.TextColor3 = Color3.fromRGB(255,255,255)
+CloseBtn.Font = Enum.Font.SourceSansBold
+CloseBtn.TextSize = 18
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0,8)
 
 -- Toggle Button
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Parent = Frame
-ToggleBtn.Size = UDim2.new(0,150,0,40)
-ToggleBtn.Position = UDim2.new(0.5,-75,0.5,-30)
+ToggleBtn.Size = UDim2.new(0,130,0,36)
+ToggleBtn.Position = UDim2.new(0.5,-65,0.4,-18)
 ToggleBtn.Text = "ปิดการทำงาน"
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(220,80,40)
 ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
 ToggleBtn.Font = Enum.Font.SourceSansBold
-ToggleBtn.TextSize = 18
+ToggleBtn.TextSize = 16
 Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0,10)
 
 -- Aurora Checkbox
 local AuroraCheck = Instance.new("TextButton")
 AuroraCheck.Parent = Frame
-AuroraCheck.Size = UDim2.new(0,180,0,30)
-AuroraCheck.Position = UDim2.new(0.5,-90,0.5,20)
-AuroraCheck.Text = "□ 🎇 ตกปลาต่อเมื่อมี Aurora"
+AuroraCheck.Size = UDim2.new(0,150,0,28)
+AuroraCheck.Position = UDim2.new(0.5,-75,0.7,-14)
+AuroraCheck.Text = "□ 🎇 Aurora Mode"
 AuroraCheck.BackgroundColor3 = Color3.fromRGB(80,40,120)
 AuroraCheck.TextColor3 = Color3.fromRGB(255,255,255)
 AuroraCheck.Font = Enum.Font.SourceSans
-AuroraCheck.TextSize = 16
+AuroraCheck.TextSize = 14
 Instance.new("UICorner", AuroraCheck).CornerRadius = UDim.new(0,8)
 
 -- Debug Button
 local DebugBtn = Instance.new("TextButton")
 DebugBtn.Parent = Frame
-DebugBtn.Size = UDim2.new(0,60,0,25)
-DebugBtn.Position = UDim2.new(0,10,1,-35)
+DebugBtn.Size = UDim2.new(0,60,0,24)
+DebugBtn.Position = UDim2.new(0,10,1,-30)
 DebugBtn.Text = "Debug"
 DebugBtn.BackgroundColor3 = Color3.fromRGB(100,100,200)
 DebugBtn.TextColor3 = Color3.fromRGB(255,255,255)
@@ -139,13 +172,26 @@ Instance.new("UICorner", DebugBtn).CornerRadius = UDim.new(0,8)
 -- Made By
 local MadeBy = Instance.new("TextLabel")
 MadeBy.Parent = Frame
-MadeBy.Size = UDim2.new(1,0,0,20)
-MadeBy.Position = UDim2.new(0,0,1,-20)
+MadeBy.Size = UDim2.new(1,0,0,18)
+MadeBy.Position = UDim2.new(0,0,1,-18)
 MadeBy.BackgroundTransparency = 1
 MadeBy.Text = "Made By Jeab 🐥"
 MadeBy.TextColor3 = Color3.fromRGB(200,180,255)
 MadeBy.Font = Enum.Font.SourceSansItalic
-MadeBy.TextSize = 14
+MadeBy.TextSize = 12
+
+-- UI ย่อ (ไอคอนลูกเจี๊ยบ)
+local MiniBtn = Instance.new("TextButton")
+MiniBtn.Parent = ScreenGui
+MiniBtn.Size = UDim2.new(0,40,0,40)
+MiniBtn.Position = UDim2.new(0.05,0,0.25,0)
+MiniBtn.Text = "🐥"
+MiniBtn.Visible = false
+MiniBtn.BackgroundColor3 = Color3.fromRGB(60,30,90)
+MiniBtn.TextSize = 22
+MiniBtn.Font = Enum.Font.SourceSansBold
+MiniBtn.TextColor3 = Color3.fromRGB(255,230,0)
+Instance.new("UICorner", MiniBtn).CornerRadius = UDim.new(1,0)
 
 -- Debug Frame
 local DebugFrame = Instance.new("Frame")
@@ -202,7 +248,7 @@ end)
 
 AuroraCheck.MouseButton1Click:Connect(function()
     auroraMode = not auroraMode
-    AuroraCheck.Text = (auroraMode and "☑ 🎇 ตกปลาต่อเมื่อมี Aurora" or "□ 🎇 ตกปลาต่อเมื่อมี Aurora")
+    AuroraCheck.Text = (auroraMode and "☑ 🎇 Aurora Mode" or "□ 🎇 Aurora Mode")
 end)
 
 DebugBtn.MouseButton1Click:Connect(function()
@@ -210,20 +256,64 @@ DebugBtn.MouseButton1Click:Connect(function()
     DebugFrame.Visible = debugVisible
 end)
 
--- Detect Scylla
+-- ปุ่มปิด UI
+CloseBtn.MouseButton1Click:Connect(function()
+    Frame.Visible = false
+    DebugFrame.Visible = false
+end)
+
+-- ปุ่มย่อ UI
+MinBtn.MouseButton1Click:Connect(function()
+    Frame.Visible = false
+    MiniBtn.Visible = true
+end)
+
+MiniBtn.MouseButton1Click:Connect(function()
+    Frame.Visible = true
+    MiniBtn.Visible = false
+end)
+
+-- Detect Scylla (โหมด Aurora ใหม่)
 workspace.ChildAdded:Connect(function(child)
     if string.find(string.lower(child.Name), "scylla") then
         scyllaActive = true
-        debugLog("พบ Scylla → ถือ Rod", Color3.fromRGB(255,50,50))
-        equipItem(rodKeyword)
+        debugLog("พบ Scylla → เตรียมเข้าโหมด Aurora", Color3.fromRGB(255,50,50))
+
+        task.spawn(function()
+            if auroraMode then
+                task.wait(7)
+                if not isNight() then
+                    debugLog("เป็นกลางวัน → ใช้ Sundial", Color3.fromRGB(255,200,0))
+                    useItem(sundialName)
+                end
+
+                task.wait(7)
+                debugLog("ใช้ Aurora Totem", Color3.fromRGB(0,200,255))
+                useItem(auroraName)
+
+                task.wait(3)
+                debugLog("สลับไป Rod เพื่อตกปลา", Color3.fromRGB(0,255,100))
+                equipItem(rodKeyword)
+            else
+                equipItem(rodKeyword)
+            end
+        end)
     end
 end)
 
 workspace.ChildRemoved:Connect(function(child)
     if string.find(string.lower(child.Name), "scylla") then
         scyllaActive = false
-        debugLog("Scylla หายไปแล้ว → ใช้ Sundial", Color3.fromRGB(255,200,0))
-        useItem(sundialName)
+        debugLog("Scylla หายไปแล้ว", Color3.fromRGB(255,200,0))
+
+        if auroraMode and isAuroraActive() then
+            debugLog("Aurora ยัง Active → ถือ Rod ต่อไป", Color3.fromRGB(0,255,150))
+            equipItem(rodKeyword)
+            repeat task.wait(1) until not isAuroraActive() or not auroraMode
+        else
+            debugLog("Aurora หมดแล้ว → กลับไปใช้ Sundial", Color3.fromRGB(200,200,200))
+            useItem(sundialName)
+        end
     end
 end)
 
@@ -233,7 +323,7 @@ task.spawn(function()
         if isRunning then
             if not scyllaActive then
                 if auroraMode and isNight() and isAuroraActive() then
-                    equipItem(rodKeyword) -- ✅ ตกปลาต่อถ้ามี Aurora Active
+                    equipItem(rodKeyword)
                     debugLog("🌌 Aurora Active → ตกปลาต่อ", Color3.fromRGB(0,200,255))
                 else
                     useItem(sundialName)
