@@ -1,240 +1,138 @@
--- 🐟 Auto Appraise GUI (With Mutation Grid Select + Auto Stop)
--- Made By Jeab 🐥
+-- 🐟 Auto Appraise GUI
+-- Made By Jeab 🐟
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local vim = game:GetService("VirtualInputManager")
-
--- ================== CONFIG ==================
 local isRunning = false
-local firstYes = true
-local targetMutation = "Albino"
+local wantedMutation = "Albino" -- ค่า default
 local hotbarSlot = 9
--- ================== CONFIG ==================
 
--- ฟังก์ชัน Reset
-local function resetAll()
-    isRunning = false
-    firstYes = true
-    ToggleBtn.Text = "Start"
-    ToggleBtn.BackgroundColor3 = Color3.fromRGB(80,180,60)
-    MutationLabel.Text = "🎯 Mutation: "..targetMutation
-    print("🔄 Reset Complete: Ready for next run")
-end
-
--- หา TextButton ใน GUI ของเกม
-local function findButton(text)
-    for _, gui in ipairs(LocalPlayer.PlayerGui:GetDescendants()) do
-        if gui:IsA("TextButton") and string.find(gui.Text, text) then
-            return gui
-        end
-    end
-end
-
--- คลิกปุ่ม
-local function clickButton(btn)
-    if btn then
-        vim:SendMouseButtonEvent(0,0,0,true,btn,0)
-        task.wait(0.1)
-        vim:SendMouseButtonEvent(0,0,0,false,btn,0)
-    end
-end
-
--- ฟังก์ชันหลัก Auto Appraise
-local function autoAppraise()
-    task.spawn(function()
-        while isRunning do
-            task.wait(0.6)
-
-            if firstYes then
-                local appraiseBtn = findButton("Can you appraise this fish?")
-                if appraiseBtn then clickButton(appraiseBtn) task.wait(0.5) end
-
-                local yesBtn = findButton("Yes")
-                if yesBtn then
-                    clickButton(yesBtn)
-                    firstYes = false
-                    task.wait(1.2)
-                end
-            else
-                local appraiseBtn = findButton("Can you appraise this fish?")
-                if appraiseBtn then clickButton(appraiseBtn) task.wait(1.2) end
-            end
-
-            -- ตรวจจับ Mutation
-            for _, gui in ipairs(LocalPlayer.PlayerGui:GetDescendants()) do
-                if gui:IsA("TextLabel") and string.find(string.lower(gui.Text), string.lower(targetMutation)) then
-                    warn("🎉 Found Mutation:", targetMutation)
-                    resetAll()
-                    return
-                end
-            end
-        end
-    end)
-end
-
--- Detect ตอนผู้เล่นกด E แล้วคุย NPC
-LocalPlayer.PlayerGui.DescendantAdded:Connect(function(obj)
-    if isRunning and obj:IsA("TextLabel") and string.find(obj.Text, "Can you appraise this fish?") then
-        print("▶️ Auto Appraise Started")
-        firstYes = true
-        autoAppraise()
-    end
-end)
-
--- ================== GUI ==================
-local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+-- ================= GUI =================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- Frame หลัก
-local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0,280,0,200)
-Frame.Position = UDim2.new(0.05,0,0.25,0)
-Frame.BackgroundColor3 = Color3.fromRGB(200,230,255)
+local Frame = Instance.new("Frame")
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0, 250, 0, 160)
+Frame.Position = UDim2.new(0.05, 0, 0.25, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(180, 220, 255)
 Frame.Active = true
 Frame.Draggable = true
-Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,12)
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 12)
 
--- Title
-local Title = Instance.new("TextLabel", Frame)
-Title.Size = UDim2.new(1,0,0,30)
+local Title = Instance.new("TextLabel")
+Title.Parent = Frame
+Title.Size = UDim2.new(1, 0, 0, 30)
 Title.BackgroundTransparency = 1
 Title.Text = "🐟 Auto Appraise"
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 20
-Title.TextColor3 = Color3.fromRGB(0,80,200)
+Title.TextColor3 = Color3.fromRGB(0, 50, 150)
 
--- ปุ่ม Toggle
-ToggleBtn = Instance.new("TextButton", Frame)
-ToggleBtn.Size = UDim2.new(0,180,0,40)
-ToggleBtn.Position = UDim2.new(0.5,-90,0.5,-20)
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Parent = Frame
+ToggleBtn.Size = UDim2.new(0, 180, 0, 40)
+ToggleBtn.Position = UDim2.new(0.5, -90, 0.4, 0)
 ToggleBtn.Text = "Start"
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(80,180,60)
-ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 60)
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleBtn.Font = Enum.Font.SourceSansBold
 ToggleBtn.TextSize = 18
-Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0,10)
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 10)
 
--- ปุ่ม Exit
-local ExitBtn = Instance.new("TextButton", Frame)
-ExitBtn.Size = UDim2.new(0,28,0,28)
-ExitBtn.Position = UDim2.new(1,-35,0,6)
+local MutationLabel = Instance.new("TextLabel")
+MutationLabel.Parent = Frame
+MutationLabel.Size = UDim2.new(1, -10, 0, 25)
+MutationLabel.Position = UDim2.new(0, 5, 0.75, 0)
+MutationLabel.BackgroundTransparency = 1
+MutationLabel.Text = "🎯 Mutation: " .. wantedMutation
+MutationLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+MutationLabel.Font = Enum.Font.SourceSans
+MutationLabel.TextSize = 16
+
+-- ปุ่มปิด
+local ExitBtn = Instance.new("TextButton")
+ExitBtn.Parent = Frame
+ExitBtn.Size = UDim2.new(0, 28, 0, 28)
+ExitBtn.Position = UDim2.new(1, -35, 0, 6)
 ExitBtn.Text = "X"
-ExitBtn.BackgroundColor3 = Color3.fromRGB(200,50,50)
-ExitBtn.TextColor3 = Color3.fromRGB(255,255,255)
+ExitBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+ExitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ExitBtn.Font = Enum.Font.SourceSansBold
 ExitBtn.TextSize = 16
-Instance.new("UICorner", ExitBtn).CornerRadius = UDim.new(1,0)
+Instance.new("UICorner", ExitBtn).CornerRadius = UDim.new(1, 0)
 
--- Label Mutation
-MutationLabel = Instance.new("TextLabel", Frame)
-MutationLabel.Size = UDim2.new(1,-20,0,25)
-MutationLabel.Position = UDim2.new(0,10,1,-70)
-MutationLabel.Text = "🎯 Mutation: "..targetMutation
-MutationLabel.TextColor3 = Color3.fromRGB(50,50,50)
-MutationLabel.BackgroundTransparency = 1
-MutationLabel.TextXAlignment = Enum.TextXAlignment.Left
-
--- ช่องใส่ slot
-SlotBox = Instance.new("TextBox", Frame)
-SlotBox.Size = UDim2.new(0,40,0,30)
-SlotBox.Position = UDim2.new(1,-50,1,-40)
-SlotBox.Text = tostring(hotbarSlot)
-SlotBox.BackgroundColor3 = Color3.fromRGB(220,220,220)
-SlotBox.TextColor3 = Color3.fromRGB(0,0,0)
-SlotBox.ClearTextOnFocus = false
-SlotBox.Font = Enum.Font.SourceSans
-SlotBox.TextSize = 16
-Instance.new("UICorner", SlotBox).CornerRadius = UDim.new(0,8)
-
--- ================== Mutation Picker ==================
-local mutationList = {
-    "Amber","Albino","Mythical","Greedy","Abyssal","Awesome",
-    "Fossilized","Lunar","Midas","Glossy","Mosaic","Silver",
-    "Hexed","Electric","Darkened","Frozen","Negative","Scorched",
-    "Translucent","Albino"
-}
-
-local PickerFrame = Instance.new("Frame", ScreenGui)
-PickerFrame.Size = UDim2.new(0,320,0,220)
-PickerFrame.Position = UDim2.new(0.4,0,0.25,0)
-PickerFrame.BackgroundColor3 = Color3.fromRGB(240,240,240)
-PickerFrame.Visible = false
-Instance.new("UICorner", PickerFrame).CornerRadius = UDim.new(0,10)
-
-local PickerTitle = Instance.new("TextLabel", PickerFrame)
-PickerTitle.Size = UDim2.new(1,0,0,30)
-PickerTitle.Text = "🔍 เลือก Mutation"
-PickerTitle.BackgroundTransparency = 1
-PickerTitle.TextColor3 = Color3.fromRGB(0,0,0)
-PickerTitle.Font = Enum.Font.SourceSansBold
-PickerTitle.TextSize = 18
-
-local Scroll = Instance.new("ScrollingFrame", PickerFrame)
-Scroll.Size = UDim2.new(1,0,1,-40)
-Scroll.Position = UDim2.new(0,0,0,40)
-Scroll.CanvasSize = UDim2.new(0,0,0,0)
-Scroll.BackgroundTransparency = 1
-
-local Grid = Instance.new("UIGridLayout", Scroll)
-Grid.CellSize = UDim2.new(0,100,0,30)
-Grid.CellPadding = UDim2.new(0,5,0,5)
-
-for _, m in ipairs(mutationList) do
-    local btn = Instance.new("TextButton", Scroll)
-    btn.Text = m
-    btn.Size = UDim2.new(0,100,0,30)
-    btn.BackgroundColor3 = Color3.fromRGB(180,200,255)
-    btn.TextColor3 = Color3.fromRGB(0,0,0)
-    btn.Font = Enum.Font.SourceSans
-    btn.TextSize = 16
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-
-    btn.MouseButton1Click:Connect(function()
-        targetMutation = m
-        MutationLabel.Text = "🎯 Mutation: "..targetMutation
-        PickerFrame.Visible = false
-    end)
+-- ================= Function =================
+local function equipHotbar(slot)
+    game:GetService("VirtualInputManager"):SendKeyEvent(true, tostring(slot), false, game)
+    task.wait(0.2)
+    game:GetService("VirtualInputManager"):SendKeyEvent(false, tostring(slot), false, game)
 end
 
-Scroll.CanvasSize = UDim2.new(0,0,0,Grid.AbsoluteContentSize.Y)
+local function clickButtonWithText(txt)
+    for _, gui in pairs(LocalPlayer.PlayerGui:GetDescendants()) do
+        if gui:IsA("TextButton") and gui.Text == txt then
+            task.wait(0.1)
+            gui.Activated:Fire()
+            gui.MouseButton1Click:Fire()
+            return true
+        end
+    end
+    return false
+end
 
--- ปุ่มเปิด Mutation Picker
-local MutationBtn = Instance.new("TextButton", Frame)
-MutationBtn.Size = UDim2.new(0,120,0,30)
-MutationBtn.Position = UDim2.new(0,10,1,-40)
-MutationBtn.Text = "เลือก Mutation"
-MutationBtn.BackgroundColor3 = Color3.fromRGB(100,140,255)
-MutationBtn.TextColor3 = Color3.fromRGB(255,255,255)
-Instance.new("UICorner", MutationBtn).CornerRadius = UDim.new(0,8)
+-- ================= Mutation Detect =================
+local chat = LocalPlayer:WaitForChild("PlayerGui"):WaitForChild("Chat")
 
-MutationBtn.MouseButton1Click:Connect(function()
-    PickerFrame.Visible = not PickerFrame.Visible
+chat.DescendantAdded:Connect(function(desc)
+    if desc:IsA("TextLabel") and desc.Text:find("is now mutated with") then
+        local mutation = string.match(desc.Text, "mutated with%s+(%w+)")
+        if mutation then
+            print("🐟 ได้ Mutation:", mutation)
+            if mutation == wantedMutation then
+                print("✅ ตรงกับที่เลือก หยุดการทำงาน")
+                isRunning = false
+                ToggleBtn.Text = "Start"
+                ToggleBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 60)
+            end
+        end
+    end
 end)
 
--- ================== Logic GUI ==================
+-- ================= Loop =================
+task.spawn(function()
+    while true do
+        if isRunning then
+            -- ถือปลาใน hotbar
+            equipHotbar(hotbarSlot)
+
+            -- คลิกปุ่ม "Can you appraise this fish?"
+            if clickButtonWithText("Can you appraise this fish?") then
+                task.wait(0.5)
+                clickButtonWithText("Yes!")
+            end
+
+            -- เว้นดีเลย์ให้ NPC reset
+            task.wait(1.5)
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- ================= Buttons =================
 ToggleBtn.MouseButton1Click:Connect(function()
     isRunning = not isRunning
     if isRunning then
         ToggleBtn.Text = "Stop"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(220,80,40)
-        print("✅ Ready: Press E to talk NPC")
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(220, 80, 40)
     else
-        resetAll()
+        ToggleBtn.Text = "Start"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 60)
     end
 end)
 
 ExitBtn.MouseButton1Click:Connect(function()
     isRunning = false
     ScreenGui:Destroy()
-    PickerFrame:Destroy()
-end)
-
-SlotBox.FocusLost:Connect(function()
-    local num = tonumber(SlotBox.Text)
-    if num and num >= 1 and num <= 9 then
-        hotbarSlot = num
-    else
-        SlotBox.Text = tostring(hotbarSlot)
-    end
 end)
