@@ -3,10 +3,83 @@ local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
 local lp = Players.LocalPlayer
 
--- ตรวจค่าหลัก
-local season = RS:WaitForChild("season")
-local weather = RS:WaitForChild("weather")
-local cycle = RS:WaitForChild("cycle_weatherstimeofday")
+-- ======================
+-- 🔧 Logic Functions
+-- ======================
+-- ฟังก์ชันใช้ไอเท็ม
+local function useItem(itemName)
+    local char = lp.Character or lp.CharacterAdded:Wait()
+    local humanoid = char:WaitForChild("Humanoid")
+    local tool = char:FindFirstChildOfClass("Tool")
+
+    if tool and string.find(tool.Name, itemName) then
+        tool:Activate()
+        return true
+    end
+
+    local backpack = lp.Backpack
+    for _, toolInBackpack in pairs(backpack:GetChildren()) do
+        if string.find(toolInBackpack.Name, itemName) then
+            humanoid:EquipTool(toolInBackpack)
+            task.wait()
+            toolInBackpack:Activate()
+            return true
+        end
+    end
+    return false
+end
+
+-- ฟังก์ชันสลับถือ
+local function equipItem(itemKeyword)
+    local char = lp.Character or lp.CharacterAdded:Wait()
+    local humanoid = char:WaitForChild("Humanoid")
+    local tool = char:FindFirstChildOfClass("Tool")
+
+    if tool and string.find(tool.Name, itemKeyword) then
+        return true
+    end
+
+    local backpack = lp.Backpack
+    for _, toolInBackpack in pairs(backpack:GetChildren()) do
+        if string.find(toolInBackpack.Name, itemKeyword) then
+            humanoid:EquipTool(toolInBackpack)
+            return true
+        end
+    end
+    return false
+end
+
+-- ================================
+-- ✅ ผูกเข้า _G ให้ Hub เรียกใช้ได้
+-- ================================
+_G.UseTotem = function(totemType)
+    if totemType == "Sundial" then
+        useItem("Sundial Totem")
+    elseif totemType == "Aurora" then
+        useItem("Aurora Totem")
+    end
+end
+
+_G.UseRod = function(mode)
+    if mode == "Default" then
+        equipItem("Rod Of The Zenith")
+    end
+end
+
+-- ======================
+-- ตรวจค่าหลักจาก ReplicatedStorage
+-- ======================
+local season = RS:FindFirstChild("season")
+local weather = RS:FindFirstChild("weather")
+local cycle = RS:FindFirstChild("cycle_weatherstimeofday")
+
+if not season or not weather or not cycle then
+    warn("⚠️ ไม่เจอ season / weather / cycle_weatherstimeofday ใน ReplicatedStorage")
+    print("Children ใน ReplicatedStorage คือ:")
+    for _,v in pairs(RS:GetChildren()) do
+        print(" -", v.Name)
+    end
+end
 
 -- ======================
 -- 🖼️ GUI หลัก
@@ -168,10 +241,10 @@ local function auroraMode()
         while running do
             local scylla = workspace:FindFirstChild("Scylla")
             if scylla then
-                if cycle.Value == "Day" then
+                if cycle and cycle.Value == "Day" then
                     print("☀️ Day → รอ Night (ใช้ Sundial ต่อ)")
                     if _G.UseTotem then _G.UseTotem("Sundial") end
-                elseif cycle.Value == "Night" then
+                elseif cycle and cycle.Value == "Night" then
                     print("🌙 Night → รอ 7 วิ แล้วใช้ Aurora Totem")
                     task.wait(7)
                     if _G.UseTotem then _G.UseTotem("Aurora") end
