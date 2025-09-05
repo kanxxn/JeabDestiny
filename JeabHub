@@ -1,283 +1,350 @@
---========================================================
--- Jeab Hub | V.1
---========================================================
+-- 🐥 Jeab Hub V.1 | Full Script
+-- UI โทนเหลืองน่ารัก + Logic Scylla & Aurora Mode
 
--- UI หลัก
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RS = game:GetService("ReplicatedStorage")
+
+-- ================== Config ==================
+local sundialName = "Sundial Totem"
+local auroraName = "Aurora Totem"
+local rodKeyword = "Rod Of The Zenith"
+
+-- ================== State ==================
+local scyllaMode = false
+local auroraMode = false
+local debugVisible = false
+local scyllaActive = false
+local isDay = true
+
+-- Debug Log Data
+local debugLines = {}
+local maxLogs = 50
+
+-- ================== Utils ==================
+local function useItem(itemName)
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local humanoid = char:WaitForChild("Humanoid")
+
+    local tool = char:FindFirstChildOfClass("Tool")
+    if tool and string.find(tool.Name, itemName) then
+        tool:Activate()
+        return true
+    end
+
+    local backpack = LocalPlayer.Backpack
+    for _, toolInBackpack in pairs(backpack:GetChildren()) do
+        if string.find(toolInBackpack.Name, itemName) then
+            humanoid:EquipTool(toolInBackpack)
+            task.wait()
+            toolInBackpack:Activate()
+            return true
+        end
+    end
+    return false
+end
+
+local function equipItem(itemKeyword)
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local humanoid = char:WaitForChild("Humanoid")
+
+    local tool = char:FindFirstChildOfClass("Tool")
+    if tool and string.find(tool.Name, itemKeyword) then
+        return true
+    end
+
+    local backpack = LocalPlayer.Backpack
+    for _, toolInBackpack in pairs(backpack:GetChildren()) do
+        if string.find(toolInBackpack.Name, itemKeyword) then
+            humanoid:EquipTool(toolInBackpack)
+            return true
+        end
+    end
+    return false
+end
+
+local function debugLog(msg, color)
+    if not debugVisible then return end
+    table.insert(debugLines, msg)
+    if #debugLines > maxLogs then
+        table.remove(debugLines, 1)
+        if DebugScroll:FindFirstChildOfClass("TextLabel") then
+            DebugScroll:FindFirstChildOfClass("TextLabel"):Destroy()
+        end
+    end
+    local line = Instance.new("TextLabel")
+    line.Size = UDim2.new(1, 0, 0, 20)
+    line.Text = msg
+    line.TextColor3 = color or Color3.fromRGB(50, 50, 50)
+    line.BackgroundTransparency = 1
+    line.TextXAlignment = Enum.TextXAlignment.Left
+    line.Font = Enum.Font.SourceSans
+    line.TextSize = 16
+    line.Parent = DebugScroll
+    DebugScroll.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y)
+    DebugScroll.CanvasPosition = Vector2.new(0, DebugScroll.CanvasSize.Y.Offset)
+end
+
+-- ================== GUI หลัก ==================
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "JeabHub"
-ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
 
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 700, 0, 450)
-MainFrame.Position = UDim2.new(0.5, -350, 0.5, -225)
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-MainFrame.Active = true
-MainFrame.Draggable = true
+-- Frame หลัก
+local Frame = Instance.new("Frame")
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0, 500, 0, 300)
+Frame.Position = UDim2.new(0.2, 0, 0.2, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(255, 220, 150)
+Frame.Active = true
+Frame.Draggable = true
+Frame.BorderSizePixel = 0
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 12)
 
-local UICorner = Instance.new("UICorner", MainFrame)
-UICorner.CornerRadius = UDim.new(0, 10)
+-- Header
+local Header = Instance.new("TextLabel")
+Header.Parent = Frame
+Header.Size = UDim2.new(1, 0, 0, 40)
+Header.BackgroundColor3 = Color3.fromRGB(255, 190, 100)
+Header.Text = "🐥 Jeab Hub | V.1"
+Header.Font = Enum.Font.SourceSansBold
+Header.TextSize = 22
+Header.TextColor3 = Color3.fromRGB(80, 50, 0)
 
--- Title
-local TitleBar = Instance.new("Frame", MainFrame)
-TitleBar.Size = UDim2.new(1, 0, 0, 40)
-TitleBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-
-local TitleText = Instance.new("TextLabel", TitleBar)
-TitleText.Size = UDim2.new(1, 0, 1, 0)
-TitleText.BackgroundTransparency = 1
-TitleText.Text = "Jeab Hub | V.1"
-TitleText.Font = Enum.Font.SourceSansBold
-TitleText.TextSize = 22
-TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
-
---========================================================
--- ส่วน Sidebar (หมวดหมู่)
---========================================================
-local Sidebar = Instance.new("Frame", MainFrame)
-Sidebar.Size = UDim2.new(0, 180, 1, -40)
+-- Sidebar
+local Sidebar = Instance.new("Frame")
+Sidebar.Parent = Frame
+Sidebar.Size = UDim2.new(0, 120, 1, -40)
 Sidebar.Position = UDim2.new(0, 0, 0, 40)
-Sidebar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Sidebar.BackgroundColor3 = Color3.fromRGB(255, 210, 120)
 
-local Content = Instance.new("Frame", MainFrame)
-Content.Size = UDim2.new(1, -180, 1, -40)
-Content.Position = UDim2.new(0, 180, 0, 40)
-Content.BackgroundColor3 = Color3.fromRGB(245, 210, 120)
+local SidebarLayout = Instance.new("UIListLayout", Sidebar)
+SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
---========================================================
--- Utility: Debug Frame
---========================================================
-function CreateDebugFrame(parent)
-	local DebugFrame = Instance.new("ScrollingFrame", parent)
-	DebugFrame.Size = UDim2.new(0, 480, 0, 140)
-	DebugFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	DebugFrame.BorderSizePixel = 0
-	DebugFrame.ScrollBarThickness = 6
-	DebugFrame.Visible = false
+-- Content
+local Content = Instance.new("Frame")
+Content.Parent = Frame
+Content.Size = UDim2.new(1, -120, 1, -40)
+Content.Position = UDim2.new(0, 120, 0, 40)
+Content.BackgroundColor3 = Color3.fromRGB(255, 240, 200)
 
-	local UIListLayout = Instance.new("UIListLayout", DebugFrame)
-	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+-- ================== Sidebar Buttons ==================
+local categories = {"สกายล่าบูบู้", "เม็กกาโลด้วน", "ซันไอดอ", "หมึกย๊ากหมึกปีศาจ"}
+local contentFrames = {}
 
-	return DebugFrame
+for _, name in ipairs(categories) do
+    local btn = Instance.new("TextButton")
+    btn.Parent = Sidebar
+    btn.Size = UDim2.new(1, -10, 0, 30)
+    btn.BackgroundColor3 = Color3.fromRGB(255, 220, 160)
+    btn.Text = name
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 16
+    btn.TextColor3 = Color3.fromRGB(80, 50, 0)
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+    local frame = Instance.new("Frame")
+    frame.Parent = Content
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.Visible = false
+    frame.BackgroundTransparency = 1
+    contentFrames[name] = frame
+
+    btn.MouseButton1Click:Connect(function()
+        for _, f in pairs(contentFrames) do f.Visible = false end
+        frame.Visible = true
+    end)
 end
 
-function AddLog(debugFrame, text)
-	local Label = Instance.new("TextLabel", debugFrame)
-	Label.Size = UDim2.new(1, -10, 0, 20)
-	Label.BackgroundTransparency = 1
-	Label.TextColor3 = Color3.fromRGB(200, 200, 200)
-	Label.Font = Enum.Font.SourceSans
-	Label.TextSize = 16
-	Label.Text = "["..os.date("%X").."] " .. text
-end
+-- ================== สกายล่าบูบู้ Content ==================
+local scyllaFrame = contentFrames["สกายล่าบูบู้"]
 
---========================================================
--- ฟังก์ชัน Sidebar ปุ่ม
---========================================================
-function CreateSidebarButton(name, callback)
-	local Btn = Instance.new("TextButton", Sidebar)
-	Btn.Size = UDim2.new(1, 0, 0, 40)
-	Btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-	Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	Btn.Font = Enum.Font.SourceSansBold
-	Btn.TextSize = 18
-	Btn.Text = name
+-- คำอธิบาย
+local desc = Instance.new("TextLabel")
+desc.Parent = scyllaFrame
+desc.Size = UDim2.new(1, -20, 0, 30)
+desc.Position = UDim2.new(0, 10, 0, 5)
+desc.BackgroundTransparency = 1
+desc.Text = "เหมาะสำหรับ Rod Of The Zenith"
+desc.Font = Enum.Font.SourceSansItalic
+desc.TextSize = 16
+desc.TextColor3 = Color3.fromRGB(80, 50, 0)
 
-	Btn.MouseButton1Click:Connect(function()
-		for _, v in pairs(Content:GetChildren()) do
-			if v:IsA("GuiObject") then v:Destroy() end
-		end
-		callback()
-	end)
-end
+-- ปุ่ม Scylla Mode
+local scyllaBtn = Instance.new("TextButton")
+scyllaBtn.Parent = scyllaFrame
+scyllaBtn.Size = UDim2.new(0, 250, 0, 40)
+scyllaBtn.Position = UDim2.new(0, 30, 0, 50)
+scyllaBtn.Text = "⚔️ Scylla Mode : OFF"
+scyllaBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+scyllaBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+scyllaBtn.Font = Enum.Font.SourceSansBold
+scyllaBtn.TextSize = 18
+Instance.new("UICorner", scyllaBtn).CornerRadius = UDim.new(0, 12)
 
---========================================================
--- หมวด: Home
---========================================================
-local function HomeTab()
-	local Label = Instance.new("TextLabel", Content)
-	Label.Size = UDim2.new(1, 0, 1, 0)
-	Label.BackgroundTransparency = 1
-	Label.Text = "Welcome to Jeab Hub | Made By Jeab"
-	Label.Font = Enum.Font.SourceSansBold
-	Label.TextSize = 24
-	Label.TextColor3 = Color3.fromRGB(0, 0, 0)
-end
+-- ปุ่ม Aurora Mode
+local auroraBtn = Instance.new("TextButton")
+auroraBtn.Parent = scyllaFrame
+auroraBtn.Size = UDim2.new(0, 250, 0, 40)
+auroraBtn.Position = UDim2.new(0, 30, 0, 100)
+auroraBtn.Text = "🌌 Aurora Mode : OFF"
+auroraBtn.BackgroundColor3 = Color3.fromRGB(50, 120, 50)
+auroraBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+auroraBtn.Font = Enum.Font.SourceSansBold
+auroraBtn.TextSize = 18
+Instance.new("UICorner", auroraBtn).CornerRadius = UDim.new(0, 12)
 
---========================================================
--- หมวด: สกายล่าบูบู้
---========================================================
-local ScyllaRunning = false
-local AuroraRunning = false
+-- ปุ่ม Debug
+local debugBtn = Instance.new("TextButton")
+debugBtn.Parent = scyllaFrame
+debugBtn.Size = UDim2.new(0, 150, 0, 35)
+debugBtn.Position = UDim2.new(0, 30, 0, 160)
+debugBtn.Text = "Debug: OFF"
+debugBtn.BackgroundColor3 = Color3.fromRGB(150, 100, 50)
+debugBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+debugBtn.Font = Enum.Font.SourceSansBold
+debugBtn.TextSize = 16
+Instance.new("UICorner", debugBtn).CornerRadius = UDim.new(0, 10)
 
-local function ScyllaTab()
-	-- Title
-	local Title = Instance.new("TextLabel", Content)
-	Title.Size = UDim2.new(1, 0, 0, 40)
-	Title.BackgroundTransparency = 1
-	Title.Text = "สกายล่าบูบู้"
-	Title.TextColor3 = Color3.fromRGB(0, 0, 0)
-	Title.Font = Enum.Font.SourceSansBold
-	Title.TextSize = 22
+-- ================== Debug Panel ==================
+local DebugFrame = Instance.new("Frame")
+DebugFrame.Parent = ScreenGui
+DebugFrame.Size = UDim2.new(0, 320, 0, 200)
+DebugFrame.Position = UDim2.new(0.6, 0, 0.2, 0)
+DebugFrame.BackgroundColor3 = Color3.fromRGB(255, 230, 180)
+DebugFrame.Visible = false
+Instance.new("UICorner", DebugFrame).CornerRadius = UDim.new(0, 10)
 
-	------------------------------------------------
-	-- Scylla Mode
-	------------------------------------------------
-	local ScyllaLabel = Instance.new("TextLabel", Content)
-	ScyllaLabel.Size = UDim2.new(1, -20, 0, 30)
-	ScyllaLabel.Position = UDim2.new(0, 10, 0, 50)
-	ScyllaLabel.BackgroundTransparency = 1
-	ScyllaLabel.Text = "Scylla Mode"
-	ScyllaLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-	ScyllaLabel.Font = Enum.Font.SourceSansBold
-	ScyllaLabel.TextSize = 20
+local DebugTitle = Instance.new("TextLabel")
+DebugTitle.Parent = DebugFrame
+DebugTitle.Size = UDim2.new(1, 0, 0, 30)
+DebugTitle.Text = "🔎 Scylla Debug Log"
+DebugTitle.BackgroundTransparency = 1
+DebugTitle.TextColor3 = Color3.fromRGB(80, 50, 0)
+DebugTitle.Font = Enum.Font.SourceSansBold
+DebugTitle.TextSize = 18
 
-	local ScyllaToggleBtn = Instance.new("TextButton", Content)
-	ScyllaToggleBtn.Size = UDim2.new(0, 120, 0, 35)
-	ScyllaToggleBtn.Position = UDim2.new(0, 20, 0, 90)
-	ScyllaToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-	ScyllaToggleBtn.Text = "ปิดการทำงาน"
-	ScyllaToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	ScyllaToggleBtn.Font = Enum.Font.SourceSansBold
-	ScyllaToggleBtn.TextSize = 18
+local CopyBtn = Instance.new("TextButton")
+CopyBtn.Parent = DebugFrame
+CopyBtn.Size = UDim2.new(0, 60, 0, 25)
+CopyBtn.Position = UDim2.new(1, -70, 0, 2)
+CopyBtn.Text = "Copy"
+CopyBtn.BackgroundColor3 = Color3.fromRGB(100, 180, 100)
+CopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CopyBtn.Font = Enum.Font.SourceSansBold
+CopyBtn.TextSize = 14
+Instance.new("UICorner", CopyBtn).CornerRadius = UDim.new(0, 8)
 
-	local ScyllaDebugBtn = Instance.new("TextButton", Content)
-	ScyllaDebugBtn.Size = UDim2.new(0, 120, 0, 35)
-	ScyllaDebugBtn.Position = UDim2.new(0, 160, 0, 90)
-	ScyllaDebugBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 220)
-	ScyllaDebugBtn.Text = "Debug"
-	ScyllaDebugBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	ScyllaDebugBtn.Font = Enum.Font.SourceSansBold
-	ScyllaDebugBtn.TextSize = 18
+DebugScroll = Instance.new("ScrollingFrame")
+DebugScroll.Parent = DebugFrame
+DebugScroll.Size = UDim2.new(1, 0, 1, -30)
+DebugScroll.Position = UDim2.new(0, 0, 0, 30)
+DebugScroll.BackgroundTransparency = 1
+DebugScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 
-	local ScyllaDebugFrame = CreateDebugFrame(Content)
-	ScyllaDebugFrame.Position = UDim2.new(0, 10, 0, 140)
-	ScyllaDebugFrame.Visible = false
+UIList = Instance.new("UIListLayout", DebugScroll)
+UIList.SortOrder = Enum.SortOrder.LayoutOrder
 
-	ScyllaDebugBtn.MouseButton1Click:Connect(function()
-		ScyllaDebugFrame.Visible = not ScyllaDebugFrame.Visible
-	end)
+CopyBtn.MouseButton1Click:Connect(function()
+    if setclipboard then
+        setclipboard(table.concat(debugLines, "\n"))
+        debugLog("✅ Debug log copied!", Color3.fromRGB(0, 150, 0))
+    else
+        debugLog("❌ setclipboard ใช้ไม่ได้ใน Executor นี้", Color3.fromRGB(200, 0, 0))
+    end
+end)
 
-	------------------------------------------------
-	-- Aurora Mode
-	------------------------------------------------
-	local AuroraLabel = Instance.new("TextLabel", Content)
-	AuroraLabel.Size = UDim2.new(1, -20, 0, 30)
-	AuroraLabel.Position = UDim2.new(0, 10, 0, 300)
-	AuroraLabel.BackgroundTransparency = 1
-	AuroraLabel.Text = "Aurora Mode"
-	AuroraLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-	AuroraLabel.Font = Enum.Font.SourceSansBold
-	AuroraLabel.TextSize = 20
+-- ================== Button Events ==================
+scyllaBtn.MouseButton1Click:Connect(function()
+    scyllaMode = not scyllaMode
+    if scyllaMode then
+        scyllaBtn.Text = "⚔️ Scylla Mode : ON"
+        scyllaBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 60)
+        auroraMode = false
+        auroraBtn.Text = "🌌 Aurora Mode : OFF"
+        auroraBtn.BackgroundColor3 = Color3.fromRGB(50, 120, 50)
+    else
+        scyllaBtn.Text = "⚔️ Scylla Mode : OFF"
+        scyllaBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    end
+end)
 
-	local AuroraToggleBtn = Instance.new("TextButton", Content)
-	AuroraToggleBtn.Size = UDim2.new(0, 120, 0, 35)
-	AuroraToggleBtn.Position = UDim2.new(0, 20, 0, 340)
-	AuroraToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-	AuroraToggleBtn.Text = "ปิดการทำงาน"
-	AuroraToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	AuroraToggleBtn.Font = Enum.Font.SourceSansBold
-	AuroraToggleBtn.TextSize = 18
+auroraBtn.MouseButton1Click:Connect(function()
+    auroraMode = not auroraMode
+    if auroraMode then
+        auroraBtn.Text = "🌌 Aurora Mode : ON"
+        auroraBtn.BackgroundColor3 = Color3.fromRGB(80, 180, 60)
+        scyllaMode = false
+        scyllaBtn.Text = "⚔️ Scylla Mode : OFF"
+        scyllaBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    else
+        auroraBtn.Text = "🌌 Aurora Mode : OFF"
+        auroraBtn.BackgroundColor3 = Color3.fromRGB(50, 120, 50)
+    end
+end)
 
-	local AuroraDebugBtn = Instance.new("TextButton", Content)
-	AuroraDebugBtn.Size = UDim2.new(0, 120, 0, 35)
-	AuroraDebugBtn.Position = UDim2.new(0, 160, 0, 340)
-	AuroraDebugBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 220)
-	AuroraDebugBtn.Text = "Debug"
-	AuroraDebugBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	AuroraDebugBtn.Font = Enum.Font.SourceSansBold
-	AuroraDebugBtn.TextSize = 18
+debugBtn.MouseButton1Click:Connect(function()
+    debugVisible = not debugVisible
+    debugBtn.Text = debugVisible and "Debug: ON" or "Debug: OFF"
+    DebugFrame.Visible = debugVisible
+end)
 
-	local AuroraDebugFrame = CreateDebugFrame(Content)
-	AuroraDebugFrame.Position = UDim2.new(0, 10, 0, 390)
-	AuroraDebugFrame.Visible = false
+-- ================== Game Event ==================
+RS.ChildAdded:Connect(function(child)
+    if string.find(string.lower(child.Name), "scylla") then
+        scyllaActive = true
+        debugLog("👀 พบ Scylla")
+    end
+end)
 
-	AuroraDebugBtn.MouseButton1Click:Connect(function()
-		AuroraDebugFrame.Visible = not AuroraDebugFrame.Visible
-	end)
+RS.ChildRemoved:Connect(function(child)
+    if string.find(string.lower(child.Name), "scylla") then
+        scyllaActive = false
+        debugLog("❌ Scylla หายไปแล้ว")
+    end
+end)
 
-	------------------------------------------------
-	-- Logic Scylla Mode
-	------------------------------------------------
-	local function RunScyllaMode()
-		while ScyllaRunning do
-			AddLog(ScyllaDebugFrame, "🔄 (Scylla) ไม่มี Scylla → Sundial")
-			wait(3)
+RS:WaitForChild("cycle_weatherstimeofday").Changed:Connect(function(val)
+    isDay = (val == "Day")
+    debugLog("⏰ เวลาเปลี่ยนเป็น: " .. val)
+end)
 
-			local ScyllaFound = math.random(1, 15) == 1
-			if ScyllaFound then
-				AddLog(ScyllaDebugFrame, "👀 เจอ Scylla! → สลับ Rod")
-				wait(10)
-				AddLog(ScyllaDebugFrame, "❌ Scylla หายไป → กลับไปเริ่มลูป")
-			end
-		end
-	end
-
-	------------------------------------------------
-	-- Logic Aurora Mode
-	------------------------------------------------
-	local function RunAuroraMode()
-		while AuroraRunning do
-			AddLog(AuroraDebugFrame, "🔄 (Aurora) ไม่มี Scylla → Sundial")
-			wait(3)
-
-			local ScyllaFound = math.random(1, 20) == 1
-			if ScyllaFound then
-				AddLog(AuroraDebugFrame, "👀 เจอ Scylla! → หยุดทุกการกระทำ")
-				wait(15)
-
-				local isDay = math.random(1, 2) == 1
-				if isDay then
-					AddLog(AuroraDebugFrame, "☀️ ตอนนี้เป็นกลางวัน")
-					AddLog(AuroraDebugFrame, "🕰 ใช้ Sundial 1 รอบ")
-					wait(15)
-					AddLog(AuroraDebugFrame, "🌙 ตรวจจับว่าเป็นกลางคืนแล้ว")
-					AddLog(AuroraDebugFrame, "🌌 ใช้ Aurora Totem")
-					AddLog(AuroraDebugFrame, "🎣 ถือ Rod Of The Zenith")
-				else
-					AddLog(AuroraDebugFrame, "🌙 ตอนนี้เป็นกลางคืน")
-					AddLog(AuroraDebugFrame, "🌌 ใช้ Aurora Totem")
-					AddLog(AuroraDebugFrame, "🎣 ถือ Rod Of The Zenith")
-				end
-
-				wait(10)
-				AddLog(AuroraDebugFrame, "❌ Scylla หายไป → กลับไปเริ่มลูป")
-			end
-		end
-	end
-
-	------------------------------------------------
-	-- Toggle Buttons
-	------------------------------------------------
-	ScyllaToggleBtn.MouseButton1Click:Connect(function()
-		ScyllaRunning = not ScyllaRunning
-		if ScyllaRunning then
-			ScyllaToggleBtn.Text = "เปิดการทำงาน"
-			ScyllaToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-			spawn(RunScyllaMode)
-		else
-			ScyllaToggleBtn.Text = "ปิดการทำงาน"
-			ScyllaToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-		end
-	end)
-
-	AuroraToggleBtn.MouseButton1Click:Connect(function()
-		AuroraRunning = not AuroraRunning
-		if AuroraRunning then
-			AuroraToggleBtn.Text = "เปิดการทำงาน"
-			AuroraToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-			spawn(RunAuroraMode)
-		else
-			AuroraToggleBtn.Text = "ปิดการทำงาน"
-			AuroraToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-		end
-	end)
-end
-
---========================================================
--- เพิ่ม Sidebar Button
---========================================================
-CreateSidebarButton("Home", HomeTab)
-CreateSidebarButton("สกายล่าบูบู้", ScyllaTab)
-
--- เริ่มหน้าแรก
-HomeTab()
+-- ================== Main Loop ==================
+task.spawn(function()
+    while true do
+        if scyllaMode then
+            if not scyllaActive then
+                useItem(sundialName)
+                debugLog("🔄 ไม่มี Scylla → Sundial")
+            else
+                equipItem(rodKeyword)
+                debugLog("🎣 พบ Scylla → ถือ Rod")
+                repeat task.wait() until not scyllaMode or not scyllaActive
+            end
+        elseif auroraMode then
+            if not scyllaActive then
+                useItem(sundialName)
+                debugLog("(Aurora) 🔄 ไม่มี Scylla → Sundial")
+            else
+                debugLog("👀 พบ Scylla → หยุดทุกการกระทำ")
+                task.wait(15)
+                if isDay then
+                    debugLog("☀️ ตอนนี้เป็นกลางวัน → ใช้ Sundial")
+                    useItem(sundialName)
+                    task.wait(15)
+                    if not isDay then
+                        debugLog("🌙 กลางคืนแล้ว → ใช้ Aurora Totem")
+                        useItem(auroraName)
+                        equipItem(rodKeyword)
+                    end
+                else
+                    debugLog("🌙 ตอนนี้เป็นกลางคืน → ใช้ Aurora Totem")
+                    useItem(auroraName)
+                    equipItem(rodKeyword)
+                end
+                repeat task.wait() until not auroraMode or not scyllaActive
+            end
+        end
+        task.wait(1)
+    end
+end)
