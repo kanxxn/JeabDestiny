@@ -1,91 +1,81 @@
 local CoreGui = game:GetService("CoreGui")
 local RS = game:GetService("ReplicatedStorage")
-local Lighting = game:GetService("Lighting")
+local WS = game:GetService("Workspace")
 
--- ===== Debug GUI =====
+-- ===== GUI =====
 local gui = Instance.new("ScreenGui")
 gui.ResetOnSpawn = false
 gui.Parent = CoreGui
 
 local frame = Instance.new("Frame")
 frame.Parent = gui
-frame.Size = UDim2.new(0,280,0,160)
+frame.Size = UDim2.new(0,280,0,200)
 frame.Position = UDim2.new(0.65,0,0.25,0)
 frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
 
 local title = Instance.new("TextLabel")
 title.Parent = frame
 title.Size = UDim2.new(1,0,0,20)
-title.Text = "🌎 Env Debug Monitor"
+title.Text = "🌎 Weather/Season Debug"
 title.BackgroundColor3 = Color3.fromRGB(50,50,50)
 title.TextColor3 = Color3.fromRGB(255,255,0)
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 14
 
-local logBox = Instance.new("TextLabel")
-logBox.Parent = frame
-logBox.Size = UDim2.new(1,0,1,-20)
-logBox.Position = UDim2.new(0,0,0,20)
-logBox.BackgroundTransparency = 1
-logBox.TextColor3 = Color3.fromRGB(200,200,200)
-logBox.Font = Enum.Font.Code
-logBox.TextSize = 14
-logBox.TextXAlignment = Enum.TextXAlignment.Left
-logBox.TextYAlignment = Enum.TextYAlignment.Top
-logBox.TextWrapped = true
-logBox.Text = "⏳ Initializing..."
-logBox.TextScaled = false
+local scroll = Instance.new("ScrollingFrame")
+scroll.Parent = frame
+scroll.Position = UDim2.new(0,0,0,20)
+scroll.Size = UDim2.new(1,0,1,-20)
+scroll.CanvasSize = UDim2.new(0,0,0,0)
+scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 6
+
+local layout = Instance.new("UIListLayout", scroll)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
 
 -- ===== Logger =====
 local logs = {}
-local maxLogs = 15
+local maxLogs = 50
 
 local function addLog(msg)
     table.insert(logs, msg)
-    if #logs > maxLogs then table.remove(logs,1) end
-    logBox.Text = table.concat(logs, "\n")
-end
-
--- ===== Detect กลางวัน/กลางคืน =====
-local function getDayNight()
-    local time = Lighting.ClockTime
-    if time >= 6 and time < 18 then
-        return "🌞 Daytime (".. math.floor(time) ..":00)"
-    else
-        return "🌙 Nighttime (".. math.floor(time) ..":00)"
-    end
-end
-addLog(getDayNight())
-
-Lighting:GetPropertyChangedSignal("ClockTime"):Connect(function()
-    addLog(getDayNight())
-end)
-
--- ===== Detect สภาพอากาศ / ฤดูกาล =====
-local GameData = RS:FindFirstChild("GameData")
-if GameData then
-    local weather = GameData:FindFirstChild("Weather")
-    local season = GameData:FindFirstChild("Season")
-
-    if weather and weather:IsA("StringValue") then
-        addLog("🌦️ Weather = " .. weather.Value)
-        weather.Changed:Connect(function(val)
-            addLog("🌦️ Weather changed → " .. tostring(val))
-        end)
-    else
-        addLog("⚠️ Weather Value not found")
+    if #logs > maxLogs then
+        table.remove(logs,1)
+        if scroll:FindFirstChildOfClass("TextLabel") then
+            scroll:FindFirstChildOfClass("TextLabel"):Destroy()
+        end
     end
 
-    if season and season:IsA("StringValue") then
-        addLog("🍂 Season = " .. season.Value)
-        season.Changed:Connect(function(val)
-            addLog("🍂 Season changed → " .. tostring(val))
-        end)
-    else
-        addLog("⚠️ Season Value not found")
-    end
-else
-    addLog("⚠️ GameData not found in ReplicatedStorage")
+    local line = Instance.new("TextLabel")
+    line.Size = UDim2.new(1,0,0,16)
+    line.Text = msg
+    line.TextColor3 = Color3.fromRGB(200,200,200)
+    line.BackgroundTransparency = 1
+    line.TextXAlignment = Enum.TextXAlignment.Left
+    line.Font = Enum.Font.Code
+    line.TextSize = 13
+    line.Parent = scroll
+
+    scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y)
+    scroll.CanvasPosition = Vector2.new(0, scroll.CanvasSize.Y.Offset)
 end
 
-addLog("✅ Env Debugger Ready")
+-- ===== Auto Detect Weather & Season =====
+local function watch(container, name)
+    for _, v in pairs(container:GetDescendants()) do
+        if v:IsA("StringValue") then
+            local lname = v.Name:lower()
+            if string.find(lname,"weather") or string.find(lname,"season") then
+                addLog("📦 Found "..name.."."..v.Name.." = "..v.Value)
+                v.Changed:Connect(function(val)
+                    addLog("🔄 "..v.Name.." changed → "..tostring(val))
+                end)
+            end
+        end
+    end
+end
+
+watch(RS, "RS")
+watch(WS, "WS")
+
+addLog("✅ Weather/Season Debugger Ready")
