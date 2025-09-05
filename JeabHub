@@ -1,0 +1,212 @@
+--// Jeab Hub 🐥 | Version : Beta
+local Players = game:GetService("Players")
+local RS = game:GetService("ReplicatedStorage")
+local lp = Players.LocalPlayer
+
+-- ตรวจค่าหลัก
+local season = RS:WaitForChild("season")
+local weather = RS:WaitForChild("weather")
+local cycle = RS:WaitForChild("cycle_weatherstimeofday")
+
+-- ======================
+-- 🖼️ GUI หลัก
+-- ======================
+local gui = Instance.new("ScreenGui")
+gui.Name = "JeabHub"
+gui.ResetOnSpawn = false
+gui.Parent = lp:WaitForChild("PlayerGui")
+
+-- ปุ่ม 🐥 เปิด/ปิด Hub
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Parent = gui
+toggleBtn.Size = UDim2.new(0,40,0,40)
+toggleBtn.Position = UDim2.new(0,10,0.5,-20)
+toggleBtn.Text = "🐥"
+toggleBtn.TextSize = 20
+toggleBtn.BackgroundColor3 = Color3.fromRGB(255,220,100)
+toggleBtn.Visible = false
+
+-- Main Hub
+local mainFrame = Instance.new("Frame")
+mainFrame.Parent = gui
+mainFrame.Size = UDim2.new(0,500,0,300)
+mainFrame.Position = UDim2.new(0.25,0,0.2,0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+mainFrame.Visible = true
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+-- Red Zone (Top Bar)
+local topBar = Instance.new("Frame")
+topBar.Parent = mainFrame
+topBar.Size = UDim2.new(1,0,0,30)
+topBar.BackgroundColor3 = Color3.fromRGB(120,30,30)
+
+local hubTitle = Instance.new("TextLabel")
+hubTitle.Parent = topBar
+hubTitle.Size = UDim2.new(1,-60,1,0)
+hubTitle.Position = UDim2.new(0,10,0,0)
+hubTitle.Text = "Jeab Hub 🐥 | Version : Beta"
+hubTitle.Font = Enum.Font.SourceSansBold
+hubTitle.TextSize = 16
+hubTitle.TextColor3 = Color3.fromRGB(255,255,0)
+hubTitle.BackgroundTransparency = 1
+hubTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Parent = topBar
+minimizeBtn.Size = UDim2.new(0,30,1,0)
+minimizeBtn.Position = UDim2.new(1,-60,0,0)
+minimizeBtn.Text = "-"
+minimizeBtn.TextSize = 18
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(200,200,50)
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Parent = topBar
+closeBtn.Size = UDim2.new(0,30,1,0)
+closeBtn.Position = UDim2.new(1,-30,0,0)
+closeBtn.Text = "x"
+closeBtn.TextSize = 18
+closeBtn.BackgroundColor3 = Color3.fromRGB(200,50,50)
+
+-- Yellow Zone (Sidebar)
+local sideBar = Instance.new("Frame")
+sideBar.Parent = mainFrame
+sideBar.Size = UDim2.new(0,120,1,-30)
+sideBar.Position = UDim2.new(0,0,0,30)
+sideBar.BackgroundColor3 = Color3.fromRGB(60,60,30)
+
+local sideLayout = Instance.new("UIListLayout")
+sideLayout.Parent = sideBar
+sideLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- ปุ่มหัวข้อ
+local function createTab(name)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1,0,0,30)
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.BackgroundColor3 = Color3.fromRGB(90,90,50)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 14
+    btn.Parent = sideBar
+    return btn
+end
+
+local scyllaTab = createTab("ScyllaBuBu")
+
+-- Green Zone (Main Panel)
+local mainPanel = Instance.new("Frame")
+mainPanel.Parent = mainFrame
+mainPanel.Size = UDim2.new(1,-120,1,-30)
+mainPanel.Position = UDim2.new(0,120,0,30)
+mainPanel.BackgroundColor3 = Color3.fromRGB(30,60,30)
+
+-- เนื้อหาใน Green Zone
+local infoLabel = Instance.new("TextLabel")
+infoLabel.Parent = mainPanel
+infoLabel.Size = UDim2.new(1,0,0,30)
+infoLabel.Text = "เลือกโหมดสำหรับ Scylla"
+infoLabel.Font = Enum.Font.SourceSansBold
+infoLabel.TextSize = 16
+infoLabel.TextColor3 = Color3.fromRGB(255,255,255)
+infoLabel.BackgroundTransparency = 1
+
+local scyllaBtn = Instance.new("TextButton")
+scyllaBtn.Parent = mainPanel
+scyllaBtn.Size = UDim2.new(0,200,0,40)
+scyllaBtn.Position = UDim2.new(0,20,0,50)
+scyllaBtn.Text = "⚔️ Scylla Mode"
+scyllaBtn.BackgroundColor3 = Color3.fromRGB(50,100,50)
+scyllaBtn.TextColor3 = Color3.fromRGB(255,255,255)
+scyllaBtn.Font = Enum.Font.SourceSans
+scyllaBtn.TextSize = 14
+
+local auroraBtn = Instance.new("TextButton")
+auroraBtn.Parent = mainPanel
+auroraBtn.Size = UDim2.new(0,200,0,40)
+auroraBtn.Position = UDim2.new(0,20,0,100)
+auroraBtn.Text = "🌌 Scylla (Aurora Mode)"
+auroraBtn.BackgroundColor3 = Color3.fromRGB(80,50,100)
+auroraBtn.TextColor3 = Color3.fromRGB(255,255,255)
+auroraBtn.Font = Enum.Font.SourceSans
+auroraBtn.TextSize = 14
+
+-- ======================
+-- ⚔️ Logic Mode
+-- ======================
+local running = false
+
+local function stopMode()
+    running = false
+    print("🛑 หยุดโหมดแล้ว")
+end
+
+local function normalMode()
+    stopMode()
+    running = true
+    print("▶️ เริ่มโหมด Scylla ปกติ")
+    task.spawn(function()
+        while running do
+            local scylla = workspace:FindFirstChild("Scylla")
+            if scylla then
+                print("พบ Scylla → ใช้ Rod")
+                if _G.UseRod then _G.UseRod("Default") end
+            else
+                if _G.UseTotem then _G.UseTotem("Sundial") end
+            end
+            task.wait(2)
+        end
+    end)
+end
+
+local function auroraMode()
+    stopMode()
+    running = true
+    print("▶️ เริ่มโหมด Scylla (Aurora)")
+    task.spawn(function()
+        while running do
+            local scylla = workspace:FindFirstChild("Scylla")
+            if scylla then
+                if cycle.Value == "Day" then
+                    print("☀️ Day → รอ Night (ใช้ Sundial ต่อ)")
+                    if _G.UseTotem then _G.UseTotem("Sundial") end
+                elseif cycle.Value == "Night" then
+                    print("🌙 Night → รอ 7 วิ แล้วใช้ Aurora Totem")
+                    task.wait(7)
+                    if _G.UseTotem then _G.UseTotem("Aurora") end
+                    print("🌌 Aurora Totem ใช้งานแล้ว → รอ 7 วิ ก่อนสลับ Rod")
+                    task.wait(7)
+                    if _G.UseRod then _G.UseRod("Default") end
+                end
+            else
+                if _G.UseTotem then _G.UseTotem("Sundial") end
+            end
+            task.wait(2)
+        end
+    end)
+end
+
+-- ======================
+-- 🎛️ ปุ่ม Function
+-- ======================
+scyllaBtn.MouseButton1Click:Connect(normalMode)
+auroraBtn.MouseButton1Click:Connect(auroraMode)
+
+-- ปิด / ย่อ Hub
+closeBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+    toggleBtn.Visible = true
+end)
+
+minimizeBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+    toggleBtn.Visible = true
+end)
+
+toggleBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = true
+    toggleBtn.Visible = false
+end)
+
+print("✅ Jeab Hub Loaded | Version : Beta")
