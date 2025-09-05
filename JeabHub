@@ -6,7 +6,6 @@ local lp = Players.LocalPlayer
 -- ======================
 -- 🔧 Logic Functions
 -- ======================
--- ฟังก์ชันใช้ไอเท็ม
 local function useItem(itemName)
     local char = lp.Character or lp.CharacterAdded:Wait()
     local humanoid = char:WaitForChild("Humanoid")
@@ -29,7 +28,6 @@ local function useItem(itemName)
     return false
 end
 
--- ฟังก์ชันสลับถือ
 local function equipItem(itemKeyword)
     local char = lp.Character or lp.CharacterAdded:Wait()
     local humanoid = char:WaitForChild("Humanoid")
@@ -69,17 +67,7 @@ end
 -- ======================
 -- ตรวจค่าหลักจาก ReplicatedStorage
 -- ======================
-local season = RS:FindFirstChild("season")
-local weather = RS:FindFirstChild("weather")
 local cycle = RS:FindFirstChild("cycle_weatherstimeofday")
-
-if not season or not weather or not cycle then
-    warn("⚠️ ไม่เจอ season / weather / cycle_weatherstimeofday ใน ReplicatedStorage")
-    print("Children ใน ReplicatedStorage คือ:")
-    for _,v in pairs(RS:GetChildren()) do
-        print(" -", v.Name)
-    end
-end
 
 -- ======================
 -- 🖼️ GUI หลัก
@@ -142,7 +130,7 @@ closeBtn.Text = "x"
 closeBtn.TextSize = 18
 closeBtn.BackgroundColor3 = Color3.fromRGB(200,50,50)
 
--- Yellow Zone (Sidebar)
+-- Sidebar
 local sideBar = Instance.new("Frame")
 sideBar.Parent = mainFrame
 sideBar.Size = UDim2.new(0,120,1,-30)
@@ -153,7 +141,6 @@ local sideLayout = Instance.new("UIListLayout")
 sideLayout.Parent = sideBar
 sideLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- ปุ่มหัวข้อ
 local function createTab(name)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1,0,0,30)
@@ -168,14 +155,13 @@ end
 
 local scyllaTab = createTab("ScyllaBuBu")
 
--- Green Zone (Main Panel)
+-- Main Panel
 local mainPanel = Instance.new("Frame")
 mainPanel.Parent = mainFrame
 mainPanel.Size = UDim2.new(1,-120,1,-30)
 mainPanel.Position = UDim2.new(0,120,0,30)
 mainPanel.BackgroundColor3 = Color3.fromRGB(30,60,30)
 
--- เนื้อหาใน Green Zone
 local infoLabel = Instance.new("TextLabel")
 infoLabel.Parent = mainPanel
 infoLabel.Size = UDim2.new(1,0,0,30)
@@ -185,88 +171,107 @@ infoLabel.TextSize = 16
 infoLabel.TextColor3 = Color3.fromRGB(255,255,255)
 infoLabel.BackgroundTransparency = 1
 
+-- ======================
+-- ⚔️ Mode System (Toggle)
+-- ======================
+local runningNormal = false
+local runningAurora = false
+
+-- ปุ่ม Scylla ปกติ
 local scyllaBtn = Instance.new("TextButton")
 scyllaBtn.Parent = mainPanel
 scyllaBtn.Size = UDim2.new(0,200,0,40)
 scyllaBtn.Position = UDim2.new(0,20,0,50)
 scyllaBtn.Text = "⚔️ Scylla Mode"
-scyllaBtn.BackgroundColor3 = Color3.fromRGB(50,100,50)
+scyllaBtn.BackgroundColor3 = Color3.fromRGB(30,30,30) -- ปิด = ดำ
 scyllaBtn.TextColor3 = Color3.fromRGB(255,255,255)
 scyllaBtn.Font = Enum.Font.SourceSans
 scyllaBtn.TextSize = 14
 
+-- ปุ่ม Aurora Mode
 local auroraBtn = Instance.new("TextButton")
 auroraBtn.Parent = mainPanel
 auroraBtn.Size = UDim2.new(0,200,0,40)
 auroraBtn.Position = UDim2.new(0,20,0,100)
 auroraBtn.Text = "🌌 Scylla (Aurora Mode)"
-auroraBtn.BackgroundColor3 = Color3.fromRGB(80,50,100)
+auroraBtn.BackgroundColor3 = Color3.fromRGB(30,30,30) -- ปิด = ดำ
 auroraBtn.TextColor3 = Color3.fromRGB(255,255,255)
 auroraBtn.Font = Enum.Font.SourceSans
 auroraBtn.TextSize = 14
 
--- ======================
--- ⚔️ Logic Mode
--- ======================
-local running = false
-
-local function stopMode()
-    running = false
-    print("🛑 หยุดโหมดแล้ว")
-end
-
-local function normalMode()
-    stopMode()
-    running = true
-    print("▶️ เริ่มโหมด Scylla ปกติ")
+-- Loop สำหรับ Normal Mode
+local function normalLoop()
     task.spawn(function()
-        while running do
+        while runningNormal do
             local scylla = workspace:FindFirstChild("Scylla")
             if scylla then
                 print("พบ Scylla → ใช้ Rod")
-                if _G.UseRod then _G.UseRod("Default") end
+                _G.UseRod("Default")
             else
-                if _G.UseTotem then _G.UseTotem("Sundial") end
+                _G.UseTotem("Sundial")
             end
             task.wait(2)
         end
     end)
 end
 
-local function auroraMode()
-    stopMode()
-    running = true
-    print("▶️ เริ่มโหมด Scylla (Aurora)")
+-- Loop สำหรับ Aurora Mode
+local function auroraLoop()
     task.spawn(function()
-        while running do
+        while runningAurora do
             local scylla = workspace:FindFirstChild("Scylla")
             if scylla then
                 if cycle and cycle.Value == "Day" then
-                    print("☀️ Day → รอ Night (ใช้ Sundial ต่อ)")
-                    if _G.UseTotem then _G.UseTotem("Sundial") end
+                    print("☀️ Day → รอ Night (ใช้ Sundial)")
+                    _G.UseTotem("Sundial")
                 elseif cycle and cycle.Value == "Night" then
-                    print("🌙 Night → รอ 7 วิ แล้วใช้ Aurora Totem")
+                    print("🌙 Night → ใช้ Aurora Totem แล้ว Rod")
                     task.wait(7)
-                    if _G.UseTotem then _G.UseTotem("Aurora") end
-                    print("🌌 Aurora Totem ใช้งานแล้ว → รอ 7 วิ ก่อนสลับ Rod")
+                    _G.UseTotem("Aurora")
                     task.wait(7)
-                    if _G.UseRod then _G.UseRod("Default") end
+                    _G.UseRod("Default")
                 end
             else
-                if _G.UseTotem then _G.UseTotem("Sundial") end
+                _G.UseTotem("Sundial")
             end
             task.wait(2)
         end
     end)
 end
+
+-- ปุ่ม Toggle Normal
+scyllaBtn.MouseButton1Click:Connect(function()
+    runningNormal = not runningNormal
+    if runningNormal then
+        runningAurora = false
+        auroraBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+        scyllaBtn.BackgroundColor3 = Color3.fromRGB(50,150,50) -- เขียว
+        print("▶️ เริ่มโหมด Scylla ปกติ")
+        normalLoop()
+    else
+        scyllaBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+        print("🛑 หยุดโหมด Scylla ปกติ")
+    end
+end)
+
+-- ปุ่ม Toggle Aurora
+auroraBtn.MouseButton1Click:Connect(function()
+    runningAurora = not runningAurora
+    if runningAurora then
+        runningNormal = false
+        scyllaBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+        auroraBtn.BackgroundColor3 = Color3.fromRGB(100,50,150) -- ม่วงอมเขียว
+        print("▶️ เริ่มโหมด Aurora")
+        auroraLoop()
+    else
+        auroraBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+        print("🛑 หยุดโหมด Aurora")
+    end
+end)
 
 -- ======================
 -- 🎛️ ปุ่ม Function
 -- ======================
-scyllaBtn.MouseButton1Click:Connect(normalMode)
-auroraBtn.MouseButton1Click:Connect(auroraMode)
-
--- ปิด / ย่อ Hub
 closeBtn.MouseButton1Click:Connect(function()
     mainFrame.Visible = false
     toggleBtn.Visible = true
