@@ -55,3 +55,4 @@ game:service'Players'.LocalPlayer.Idled:connect(function()
     wait(2)
     ab.Text = "กันเตะทำงานปกติ"
 end)
+
